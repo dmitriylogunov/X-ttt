@@ -1,14 +1,55 @@
+@use "sass:color";
+
 section#TTT_game{
 	text-align: center;
 	padding: 40px 20px;
 	min-height: 100vh;
 	display: flex;
 	flex-direction: column;
+	background: $gradientPrimary;
+	color: $textLight;
+
+	// ============================================
+	// ANIMATIONS
+	// ============================================
+	
+	// Page entrance - slides up while fading in
+	@keyframes fadeInUp {
+		from {
+			opacity: 0;
+			transform: translateY(30px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	// Winning cells - subtle breathing/pulse effect
+	@keyframes pulse {
+		0%, 100% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(1.05);
+		}
+	}
+
+	// Accent glow - pulsing box shadow (unused, available for future)
+	@keyframes glow {
+		0%, 100% {
+			box-shadow: 0 0 20px rgba($colorAccent, 0.3);
+		}
+		50% {
+			box-shadow: 0 0 40px rgba($colorAccent, 0.6);
+		}
+	}
 
 	#MainMenu {
 		flex: 1;
 		display: flex;
 		flex-direction: column;
+		animation: fadeInUp 0.6s ease-out;
 
 		.menu-center {
 			flex: 1;
@@ -19,57 +60,74 @@ section#TTT_game{
 		}
 
 		.game-title {
-			font-family: $hdrFont;
-			@include font-size(48px);
-			color: $colorSecondary;
-			margin-bottom: 40px;
+			font-family: $featureFont;
+			@include font-size(56px);
+			color: $textLight;
+			margin-bottom: 50px;
 			line-height: 1.2;
+			text-shadow: 0 0 30px rgba($colorAccent, 0.5);
+			letter-spacing: 3px;
 		}
 
 		.menu-options {
 			display: flex;
 			flex-direction: column;
 			align-items: center;
-			gap: 20px;
+			gap: 18px;
 
 			.menu-btn {
-				width: 280px;
+				width: 300px;
 				display: inline-block;
 				text-align: center;
 				text-decoration: none;
+				animation: fadeInUp 0.6s ease-out backwards;
+
+				&:nth-child(1) { animation-delay: 0.1s; }
+				&:nth-child(2) { animation-delay: 0.2s; }
+				&:nth-child(3) { animation-delay: 0.3s; }
 			}
 		}
 
 		.game-subtitle {
-			@include font-size(18px);
-			color: $bodyText;
-			padding: 40px 0;
+			@include font-size(16px);
+			color: $textMuted;
+			padding: 50px 0;
 			font-weight: 300;
+			letter-spacing: 1px;
 		}
 	}
 
 	#AboutPage {
+		animation: fadeInUp 0.6s ease-out;
+
 		h1 {
-			font-family: $hdrFont;
-			@include font-size(32px);
-			color: $colorSecondary;
-			margin-bottom: 30px;
+			font-family: $featureFont;
+			@include font-size(36px);
+			color: $textLight;
+			margin-bottom: 40px;
+			text-shadow: 0 0 20px rgba($colorAccent, 0.4);
 		}
 
+		// Glassmorphism card with frosted glass effect
 		.about-content {
-			background: #fff;
-			padding: 30px;
-			border-radius: 8px;
+			background: rgba(255,255,255,0.05);
+			backdrop-filter: blur(10px);  // Frosted glass blur
+			padding: 40px;
+			border-radius: 20px;
 			margin-bottom: 30px;
 			text-align: left;
-			box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+			border: 1px solid rgba(255,255,255,0.1);  // Subtle border for definition
+			box-shadow: $shadowSoft;
+			max-width: 600px;
+			margin-left: auto;
+			margin-right: auto;
 
 			h2 {
 				font-family: $hdrFont;
-				@include font-size(20px);
-				color: $colorSecondary;
+				@include font-size(22px);
+				color: $colorAccent;
 				margin-bottom: 15px;
-				margin-top: 20px;
+				margin-top: 25px;
 
 				&:first-child {
 					margin-top: 0;
@@ -78,41 +136,47 @@ section#TTT_game{
 
 			p {
 				@include font-size(16px);
-				color: $bodyText;
-				margin-bottom: 10px;
-				line-height: 1.6;
+				color: $textMuted;
+				margin-bottom: 12px;
+				line-height: 1.7;
 			}
 
 			a {
-				color: $colorSecondary;
-				text-decoration: underline;
+				color: $colorAccentLight;
+				text-decoration: none;
+				border-bottom: 1px solid transparent;
+				@include transition(border-color 0.2s ease, color 0.2s ease);
 
 				&:hover {
-					color: $colorSecondaryDark;
+					color: $colorAccent;
+					border-bottom-color: $colorAccent;
 				}
 			}
 		}
 	}
 
 	#SetName {
+		animation: fadeInUp 0.6s ease-out;
+
 		h1 {
-			font-family: $hdrFont;
-			@include font-size(28px);
-			color: $colorSecondary;
-			margin-bottom: 30px;
+			font-family: $featureFont;
+			@include font-size(32px);
+			color: $textLight;
+			margin-bottom: 40px;
+			text-shadow: 0 0 20px rgba($colorAccent, 0.4);
 		}
 
 		.button-row {
 			display: flex;
 			justify-content: center;
 			gap: 20px;
-			margin-top: 20px;
+			margin-top: 30px;
 
 			.back-btn {
-				background: #888;
+				background: $colorSecondary;
 				
 				&:hover {
-					background: #666;
+					background: color.adjust($colorSecondary, $lightness: 10%);
 				}
 			}
 		}
@@ -129,12 +193,15 @@ section#TTT_game{
 		}
 
 		label {
-			@include font-size(16px);
+			@include font-size(14px);
 			display: block;
-			margin-bottom: 11px;
+			margin-bottom: 12px;
 			width: 100%;
-			font-weight: 300;
+			font-weight: 500;
 			text-align: left;
+			color: $textMuted;
+			text-transform: uppercase;
+			letter-spacing: 1px;
 
 			span.required {
 				display: none;
@@ -143,142 +210,159 @@ section#TTT_game{
 
 		.input {
 			@include textInput(100%);
-			border: 1px solid #ebe6f1;
 		}
 		.input.password{
 			@include textInput(100%);
-			border: 1px solid #ebe6f1;
 		}
 		.input.textarea {
 			@include textInput(100%);
-			border: 1px solid #ebe6f1;
 			height: 100px;
 			line-height:1.5em;
 			padding-top:10px;
 		}
 
 		&.select_option select{
-			border-radius: 7px;
-		  border:none;
-		  padding:0 18px;
-		  height: 46px;
-		  background:#fff;
-		  border: 1px solid #ebe6f1;
-		  box-shadow:0px 4px 0px 0px #ebe6f1;
-		  color: #888888;
-		  font-style: italic;
-		  @include font-size(18px);
-		  font-weight: 300;
+			border-radius: 12px;
+			border: 2px solid rgba(255,255,255,0.2);
+			padding:0 18px;
+			height: 50px;
+			background: rgba(255,255,255,0.1);
+			color: $textLight;
+			@include font-size(18px);
+			font-weight: 400;
 			width: 100%;
 		}
 		&.error {
 			label{
 				.required {
 					display: inline;
-					color:$colorSecondary;
+					color: $colorAccent;
 				}
 			}
 			.input {
-					@include textInput(100%);
-					border: 1px solid $colorSecondary;
-					color: $colorSecondary;
+				border-color: $colorAccent;
 			}
 			.input.textarea {
-					@include textInput(100%);
-					border: 1px solid $colorSecondary;
-					height: 100px;
-					line-height:1.5em;
-					padding-top:10px;
-			}				
-			::-webkit-input-placeholder { /* WebKit, Blink, Edge */
-			    color:    $colorSecondary;
-			}
-			:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
-			   color:    $colorSecondary;
-			   opacity:  1;
-			}
-			::-moz-placeholder { /* Mozilla Firefox 19+ */
-			   color:    $colorSecondary;
-			   opacity:  1;
-			}
-			:-ms-input-placeholder { /* Internet Explorer 10-11 */
-			   color:    $colorSecondary;
-			}
-			:placeholder-shown { /* Standard (https://drafts.csswg.org/selectors-4/#placeholder) */
-			  color:    $colorSecondary;
-			}							
+				border-color: $colorAccent;
+			}			
 		}
 
 		&.select_option.error select{
-		  border: 1px solid $colorSecondary;
-		  //box-shadow:0px 4px 0px 0px $colorSecondary;
-		  color: $colorSecondary;
+		  border-color: $colorAccent;
 		}			
 	}
 
 	.button {
-		@include button(179px,50px,4px,$colorSecondary,$colorSecondaryDark,#fff);
+		@include button(200px, 54px, 6px, $colorAccent, $colorAccentDark, #fff);
 		font-family: $hdrFont;
-		@include font-size(18px);
-		margin-top:24px;
+		@include font-size(16px);
+		margin-top: 24px;
 
 		&.long {
 			width: 300px;
 		}	
 	}
 
-	#game_stat {
-		background: #eee;
-		margin: 10px auto;
-		width: 300px;
-		height: 90px;
-		vertical-align: middle;
-		text-align: center;
-		padding-top: 10px;
-		font-family: $hdrFont;
+	// Game area wrapper
+	#GameMain {
+		animation: fadeInUp 0.6s ease-out;
 
-		#game_stat_msg {
+		h1 {
+			font-family: $featureFont;
 			@include font-size(28px);
+			color: $textLight;
+			margin-bottom: 20px;
+			text-shadow: 0 0 20px rgba($colorAccent, 0.4);
+			text-transform: uppercase;
+			letter-spacing: 2px;
 		}
 
-		#game_turn_msg {
-			padding-top: 5px;
-			@include font-size(22px);
+		.game-area {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
 		}
 	}
 
+	// Game status panel - glassmorphism style
+	#game_stat {
+		background: rgba(255,255,255,0.08);
+		backdrop-filter: blur(10px);
+		margin: 15px auto;
+		width: 320px;
+		padding: 20px;
+		border-radius: 16px;
+		border: 1px solid rgba(255,255,255,0.1);
+		font-family: $hdrFont;
+
+		#game_stat_msg {
+			@include font-size(26px);
+			color: $textLight;
+			font-weight: 600;
+		}
+
+		#game_turn_msg {
+			padding-top: 8px;
+			@include font-size(20px);
+			color: $textMuted;
+		}
+	}
+
+	// Game board with hover highlights and win animation
 	#game_board {
 		display: inline-block;
+		margin: 20px 0;
 
 		table {
-			background: #fff;
-			margin: 10px auto;
+			background: rgba(255,255,255,0.05);
+			margin: 0 auto;
+			border-radius: 16px;
+			overflow: hidden;
+			border: 2px solid rgba(255,255,255,0.1);
+			box-shadow: $shadowHard;  // Elevated card effect
 		}
 
 		td {
-			width: 130px;
-			height: 130px;
-
+			width: 110px;
+			height: 110px;
 			vertical-align: middle;
 			text-align: center;
+			cursor: pointer;
+			@include transition(background 0.2s ease, transform 0.1s ease);
+			@include font-size(48px);
+			font-family: $featureFont;
+			color: $textLight;
 
-			&:hover{
-				background: #ff0;
+			// Hover: accent color highlight
+			&:hover {
+				background: rgba($colorAccent, 0.2);
 			}
 
+			// Win state: green highlight with pulse animation
 			&.win {
-				background: #f00;
+				background: rgba($colorSuccess, 0.4);
+				animation: pulse 0.5s ease infinite;
 			}
 		}
 
 		.vbrd {
-			border-left: 7px solid #000;
-			border-right: 7px solid #000;
+			border-left: 3px solid rgba(255,255,255,0.3);
+			border-right: 3px solid rgba(255,255,255,0.3);
 		}
 
 		.hbrd {
-			border-top: 7px solid #000;
-			border-bottom: 7px solid #000;
+			border-top: 3px solid rgba(255,255,255,0.3);
+			border-bottom: 3px solid rgba(255,255,255,0.3);
+		}
+	}
+
+	.game-controls {
+		display: flex;
+		justify-content: center;
+		margin-top: 10px;
+
+		.button {
+			margin-top: 0;
 		}
 	}
 

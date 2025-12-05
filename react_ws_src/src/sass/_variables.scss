@@ -1,13 +1,34 @@
+// Typography
 $hdrFont : 'Montserrat', sans-serif;
 $bodyFont : 'Roboto', sans-serif;
-$featureFont : 'Orbitron', sans-serif;
+$featureFont : 'Orbitron', sans-serif;  // Futuristic font for titles
 
-$colorPrimary : #dde;
-$colorPrimaryDark : #2b0066;
-$colorSecondary : #026;
-$colorSecondaryDark : #b4021d;
+// Dark theme color palette
+$colorPrimary : #1a1a2e;  // Deep navy background  // Deep navy background
+$colorPrimaryLight : #16213e;
+$colorAccent : #e94560;  // Coral red - primary action color
+$colorAccentDark : #c73e54;  // Button shadow/pressed state
+$colorAccentLight : #ff6b6b;
+$colorSecondary : #0f3460;  // Secondary buttons
+$colorSecondaryDark : #0a2540;
+$colorSuccess : #00d9a5;  // Win state highlight
+$colorWarning : #ffc107;
+
+$textLight : #ffffff;
+$textMuted : rgba(255,255,255,0.7);
+$bodyText: #e0e0e0;
+
+// Gradients for backgrounds
+$gradientPrimary : linear-gradient(135deg, $colorPrimary 0%, $colorPrimaryLight 100%);
+$gradientAccent : linear-gradient(135deg, $colorAccent 0%, $colorAccentLight 100%);
+
+// Elevation shadows
+$shadowSoft : 0 4px 15px rgba(0,0,0,0.3);  // Cards, panels
+$shadowHard : 0 8px 25px rgba(0,0,0,0.4);  // Game board, modals
+
+// Legacy variables for compatibility
+$colorPrimaryDark : $colorSecondaryDark;
 $pin : rgba(255,255,255,0.2);
 $grey : #f4f4f4;
-$bodyText: #555;
 
 
