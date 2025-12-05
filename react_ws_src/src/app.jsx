@@ -27,7 +27,7 @@ const renderSite = (historyInstance) => {
 		<Router history={resolvedHistory}>
 			<Route path='/' component={Main}>
 
-				<IndexRoute components={{mainContent: Txt_page}} />
+				<IndexRoute components={{mainContent: Ttt}} />
 
 				<Route path='/pg/(:page)' components={{mainContent: Txt_page}} />
 

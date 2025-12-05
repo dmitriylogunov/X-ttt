@@ -1,7 +1,5 @@
 import React, { Component} from 'react'
-import Header from './layouts/Header.jsx'
 import MainContent from './layouts/MainContent.jsx'
-import Footer from './layouts/Footer.jsx'
 
 export default class Main extends Component {
 
@@ -9,11 +7,9 @@ export default class Main extends Component {
 		const { popup, mainContent } = this.props
 		return (
 			<div style={fullHeight}>
-				<Header/>
 				<MainContent>
 					{ mainContent }
 				</MainContent>
-				<Footer />
 				{ popup }
 			</div>
 		)
