@@ -18,7 +18,12 @@ const port = process.env.PORT || 3001
 app.use(express.static(path.join(__dirname, 'public')))
 
 // Catch-all: serve index.html for client-side routing
-app.get('*', (req, res) => {
+// Exclude socket.io and static file requests
+app.get('*', (req, res, next) => {
+	// Skip socket.io requests
+	if (req.path.startsWith('/socket.io')) {
+		return next()
+	}
 	res.sendFile(path.join(__dirname, 'public', 'index.html'))
 })
 
