@@ -14,7 +14,13 @@ export default defineConfig(({ mode }) => ({
   },
   server: {
     host: '0.0.0.0',
-    port: 3000
+    port: 3000,
+    proxy: {
+      '/socket.io': {
+        target: 'http://localhost:3001',
+        ws: true
+      }
+    }
   },
   css: {
     preprocessorOptions: {
