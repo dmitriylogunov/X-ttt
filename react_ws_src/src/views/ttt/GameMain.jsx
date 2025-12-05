@@ -102,8 +102,8 @@ export default class SetName extends Component {
 		const { cell_vals } = this.state
 
 		return (<div>
-		        	{cell_vals && cell_vals[c]=='x' && <i className="fa fa-times fa-5x"></i>}
-					{cell_vals && cell_vals[c]=='o' && <i className="fa fa-circle-o fa-5x"></i>}
+		        	{cell_vals && cell_vals[c]=='x' && <i className="fa fa-times fa-2x"></i>}
+					{cell_vals && cell_vals[c]=='o' && <i className="fa fa-circle-o fa-2x"></i>}
 				</div>)
 	}
 
