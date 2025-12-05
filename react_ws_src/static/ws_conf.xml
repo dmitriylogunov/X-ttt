@@ -26,16 +26,15 @@
 		<SCRIPT__contact_form		u='e/s'	/>
 
 
-		<SOCKET__io		_u='http://localhost:3001'	/>
+		<SOCKET__io		u='http://localhost:3001'	/>
 	</loc>
 
 <!--	========================	========================	========================	-->
 
-	<main_menu>
+<main_menu>
 		<pages>
-			<p		name="Home"				u="/"					ico="fa fa-home"		/>
+			<p		name="Home"				u="/"						ico="fa fa-home"		/>
 			<p		name="TTT"				u="/ttt"				ico="fa fa-trophy"		/>
-			<p		name="Info"				u="/pg/info"			ico="fa fa-info"		/>
 		</pages>
 	</main_menu>
 
@@ -86,51 +85,6 @@
 				<b txt='PLAY' u='/ttt' />
 			</btns>
 		</home>
-
-<!--	========================	========================	========================	-->
-
-		<info		pg_name='Info'>
-			<txt>
-			<![CDATA[
-		<section id='info'>
-			<div id='page-container'>
-				<h3>This is a simple example of React.js and Node.js stack based web app</h3>
-
-				<br/>
-				<h4>Front End - major libraries used:</h4>
-				<ul class='simple_list'>
-					<li>react</li>
-					<li>webpack</li>
-					<li>babel</li>
-					<li>react-router</li>
-					<li>ampersand</li>
-					<li>sass</li>
-					<li>jest</li>
-				</ul>
-
-				<br/>
-				<h4>Server - major libraries used:</h4>
-				<ul class='simple_list'>
-					<li>node.js</li>
-					<li>socket.io</li>
-					<li>express</li>
-				</ul>
-
-				<br/>
-				<h3>Configurable with external XML file - <a href="./ws_conf.xml" target='blank'>ws_conf.xml</a></h3>
-
-				<br/><br/>
-				<h2>For demonstration purposes.</h2>
-				<br/>
-
-			</div>
-		</section>
-			]]>
-			</txt>
-			<btns>
-				<b txt='PLAY' u='/ttt' />
-			</btns>
-		</info>
 
 <!--	========================	========================	========================	-->
 
