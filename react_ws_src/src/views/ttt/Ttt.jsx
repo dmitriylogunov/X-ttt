@@ -1,10 +1,11 @@
 import React, { Component} from 'react'
 import { Link } from 'react-router'
+import app from 'ampersand-app'
 
-import SetName from './SetName'
-import SetGameType from './SetGameType'
+import SetName from './SetName.jsx'
+import SetGameType from './SetGameType.jsx'
 
-import GameMain from './GameMain'
+import GameMain from './GameMain.jsx'
 
 export default class Ttt extends Component {
 

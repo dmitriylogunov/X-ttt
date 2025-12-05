@@ -1,29 +1,30 @@
 import React from 'react'
 import app from 'ampersand-app'
 import { render } from 'react-dom'
-import { Router, Route, Redirect, IndexRoute, browserHistory  } from 'react-router'
+import { Router, Route, IndexRoute } from 'react-router'
 import { createHistory, useBasename } from 'history'
 import ga from 'react-ga'
 
 import './sass/main.scss'
 
-import Main from './views/Main'
+import Main from './views/Main.jsx'
 
-import Ttt from './views/ttt/Ttt'
+import Ttt from './views/ttt/Ttt.jsx'
 
-import Txt_page from './views/pages/Txt_page'
-import PopUp_page from './views/pages/PopUp_page'
+import Txt_page from './views/pages/Txt_page.jsx'
+import PopUp_page from './views/pages/PopUp_page.jsx'
 
-import Contact from './views/pages/Contact'
-import ErrorPage from './views/pages/ErrorPage'
+import Contact from './views/pages/Contact.jsx'
+import ErrorPage from './views/pages/ErrorPage.jsx'
 
 import prep_env from './models/prep_env'
 
+let historyRef = null
 
-
-let renderSite = function () {
+const renderSite = (historyInstance) => {
+	const resolvedHistory = historyInstance || createHistory()
 	return render((
-		<Router history={browserHistory}>
+		<Router history={resolvedHistory}>
 			<Route path='/' component={Main}>
 
 				<IndexRoute components={{mainContent: Txt_page}} />
@@ -69,40 +70,48 @@ app.extend({
 
 
 	init () {
-
+ 
 		prep_env(this.start.bind(this))
 
 	},
 
 	start_ga () {
-		ga.initialize(app.settings.ws_conf.conf.ga_acc.an, { debug: true });
-		// ga.pageview(location.pathname)
-		const loclisten = browserHistory.listen((location) => {
-			// ga.send('send', location);
+		const gaAcc = app.settings.ws_conf && app.settings.ws_conf.conf && app.settings.ws_conf.conf.ga_acc && app.settings.ws_conf.conf.ga_acc.an
+		if (!gaAcc) {
+			return
+		}
+
+		ga.initialize(gaAcc, { debug: import.meta.env && import.meta.env.DEV })
+		const history = this.history || historyRef
+		history && history.listen((location) => {
 			ga.pageview(location.pathname)
 		})
 	},
 
 	start () {
-		const history = useBasename(createHistory)({
-			// basename: document.getElementsByTagName('base')[0] ? document.getElementsByTagName('base')[0].getAttribute('href') : ''
-			basename: base_dir
+		const baseDir = (import.meta.env && import.meta.env.BASE_URL) ? import.meta.env.BASE_URL : '/'
+		const normalizedBase = baseDir === '/' ? '/' : baseDir.replace(/\/$/, '') || '/'
+		this.history = useBasename(createHistory)({
+			basename: normalizedBase
 		})
+		historyRef = this.history
 
 		this.start_ga()
 
-		renderSite()
+		renderSite(this.history)
 	},
 
 	show_page (u) {
+		const history = this.history || historyRef
+		if (!history) return
 		switch(u) {
 			case 'home':
-				browserHistory.push('/')
+				history.push('/')
 				break
 
 			default:
 				console.log('show_page event with:', u) 
-				browserHistory.push(u)
+				history.push(u)
 				break
 		}
 	},

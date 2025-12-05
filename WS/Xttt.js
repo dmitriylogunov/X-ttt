@@ -1,28 +1,24 @@
-// Setup basic express server
-var express = require('express');
-var app = express();
-var server = require('http').createServer(app);
-io = require('socket.io')(server);
+const path = require('path')
+const express = require('express')
+const http = require('http')
+const { Server } = require('socket.io')
 
-util = require("util");							// Utility resources (logging, object inspection, etc)
+const registerGameHandlers = require('./XtttGame')
 
-/**************************************************
-** GAME VARIABLES
-**************************************************/
-Player = require("./Player").Player;			// Player class
-players = [];									// Array of connected players
-players_avail = [];
+const app = express()
+const server = http.createServer(app)
+const io = new Server(server, {
+	cors: {
+		origin: '*'
+	}
+})
 
+const port = process.env.PORT || 3001
 
-var port = process.env.PORT || 3001;
+app.use(express.static(path.join(__dirname, 'public')))
 
-server.listen(port, function () {
-	console.log('Server listening at port %d', port);
-});
+registerGameHandlers(io)
 
-// Routing
-app.use(express.static(__dirname + '/public'));
-
-require('./XtttGame.js');
-
-io.on('connection', set_game_sock_handlers);
+server.listen(port, () => {
+	console.log('Server listening at port %d', port)
+})

@@ -3,7 +3,7 @@
 
 Major libraries used:
 - react
-- webpack
+- vite
 - babel
 - react-router
 - ampersand
@@ -19,31 +19,31 @@ Major libraries used:
 
 ### Getting Started
 
-Install all the packages
+Install dependencies (Node 22+ is required):
 
 ~~~bash
 npm install
 ~~~
 
-To start the development web server use the following command and turn your browser to [http://localhost:3000](http://localhost:3000) or [http://0.0.0.0:3000](http://0.0.0.0:3000) 
+Start the Vite dev server at [http://localhost:3000](http://localhost:3000):
 
 ~~~bash
-npm start
+npm run dev
 ~~~
 
-To run code lint
+Lint the source:
 
 ~~~bash
 npm run lint
 ~~~
 
-To run code tests
+Execute the Jest suite:
 
 ~~~bash
 npm run test
 ~~~
 
-To build the site 
+Generate a production build (outputs to `dist/`):
 
 ~~~bash
 npm run build

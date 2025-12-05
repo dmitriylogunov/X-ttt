@@ -1,7 +1,8 @@
 import React, {Component} from 'react'
 import superagent from 'superagent'
+import app from 'ampersand-app'
 
-import PopUp from '../layouts/PopUp'
+import PopUp from '../layouts/PopUp.jsx'
 import validator from 'validator'
 import objectAssign from 'object-assign'
 import serialize_params from '../../helpers/serialize_params'

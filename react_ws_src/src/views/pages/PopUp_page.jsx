@@ -1,5 +1,6 @@
 import React, {Component} from 'react'
-import PopUp from '../layouts/PopUp'
+import PopUp from '../layouts/PopUp.jsx'
+import app from 'ampersand-app'
 
 export default class PopUp_page extends Component {
 

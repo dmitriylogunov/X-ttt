@@ -1,111 +1,95 @@
+const util = require('util')
+const Player = require('./Player')
 
+let nextUid = 1
 
-// ----	--------------------------------------------	--------------------------------------------	
-// ----	--------------------------------------------	--------------------------------------------	
+const generateUid = () => nextUid++
 
-// New player has joined
-function onNewPlayer(data) {
+const removePlayerFrom = (collection, player) => {
+	const idx = collection.indexOf(player)
+	if (idx >= 0) {
+		collection.splice(idx, 1)
+	}
+}
 
-	util.log("New player has joined: "+data.name);
+const createGame = (io) => {
+	const players = []
+	const availablePlayers = []
 
-	// Create a new player
-	var newPlayer = new Player(-1, data.name, "looking");
-	newPlayer.sockid = this.id;
+	const pairAvailablePlayers = () => {
+		if (availablePlayers.length < 2) {
+			return
+		}
 
-	this.player = newPlayer;
+		const p1 = availablePlayers.shift()
+		const p2 = availablePlayers.shift()
 
-	// Add new player to the players array
-	players.push(newPlayer);
-	players_avail.push(newPlayer);
+		p1.mode = 'm'
+		p2.mode = 's'
+		p1.status = 'paired'
+		p2.status = 'paired'
+		p1.opp = p2
+		p2.opp = p1
 
-	// util.log("looking for pair - uid:"+newPlayer.uid + " ("+newPlayer.name + ")");
+		io.to(p1.sockid).emit('pair_players', { opp: { name: p2.name, uid: p2.uid }, mode: 'm' })
+		io.to(p2.sockid).emit('pair_players', { opp: { name: p1.name, uid: p1.uid }, mode: 's' })
 
-	pair_avail_players();
-
-	// updAdmin("looking for pair - uid:"+p.uid + " ("+p.name + ")");
-
-	// updAdmin("new player connected - uid:"+data.uid + " - "+data.name);
-
-};
-
-// ----	--------------------------------------------	--------------------------------------------	
-
-function pair_avail_players() {
-
-	if (players_avail.length < 2)
-		return;
-
-
-	var p1 = players_avail.shift();
-	var p2 = players_avail.shift();
-
-	p1.mode = 'm';
-	p2.mode = 's';
-	p1.status = 'paired';
-	p2.status = 'paired';
-	p1.opp = p2;
-	p2.opp = p1;
-
-	//util.log("connect_new_players p1: "+util.inspect(p1, { showHidden: true, depth: 3, colors: true }));
-
-	// io.sockets.connected[p1.sockid].emit("pair_players", {opp: {name:p2.name, uid:p2.uid}, mode:'m'});
-	// io.sockets.connected[p2.sockid].emit("pair_players", {opp: {name:p1.name, uid:p1.uid}, mode:'s'});
-	io.to(p1.sockid).emit("pair_players", {opp: {name:p2.name, uid:p2.uid}, mode:'m'});
-	io.to(p2.sockid).emit("pair_players", {opp: {name:p1.name, uid:p1.uid}, mode:'s'});
-
-	util.log("connect_new_players - uidM:"+p1.uid + " ("+p1.name + ")  ++  uidS: "+p2.uid + " ("+p2.name+")");
-	// updAdmin("connect_new_players - uidM:"+p1.uid + " ("+p1.name + ")  ++  uidS: "+p2.uid + " ("+p2.name+")");
-
-};
-
-// ----	--------------------------------------------	--------------------------------------------	
-
-function onTurn(data) {
-	//util.log("onGameLoadedS with qgid: "+data.qgid);
-
-	io.to(this.player.opp.sockid).emit("opp_turn", {cell_id: data.cell_id});
-
-	util.log("turn  --  usr:"+this.player.mode + " - :"+this.player.name + "  --  cell_id:"+data.cell_id);
-	// updAdmin("Q answer - game - qgid:"+data.qgid + "  --  usr:"+this.player.mode + " - uid:"+this.player.uid + "  --  qnum:"+data.qnum + "  --  ans:"+data.ansnum);
-};
-
-// ----	--------------------------------------------	--------------------------------------------	
-// ----	--------------------------------------------	--------------------------------------------	
-
-// Socket client has disconnected
-function onClientDisconnect() {
-	// util.log("onClientDisconnect: "+this.id);
-
-
-	var removePlayer = this.player;
-	players.splice(players.indexOf(removePlayer), 1);
-	players_avail.splice(players_avail.indexOf(removePlayer), 1);
-
-
-	if (this.status == "admin") {
-		util.log("Admin has disconnected: "+this.uid);
-//		updAdmin("Admin has disconnected - uid:"+this.uid + "  --  "+this.name);
-	} else {
-		util.log("Player has disconnected: "+this.id);
-//		updAdmin("player disconnected - uid:"+removePlayer.uid + "  --  "+removePlayer.name);
+		util.log(`connect_new_players - uidM:${p1.uid} (${p1.name})  ++  uidS: ${p2.uid} (${p2.name})`)
 	}
 
-};
+	const onNewPlayer = (socket, data = {}) => {
+		const playerName = data.name || 'Player'
+		const newPlayer = new Player(generateUid(), playerName, 'looking')
+		newPlayer.sockid = socket.id
+		socket.player = newPlayer
 
-// ----	--------------------------------------------	--------------------------------------------	
-// ----	--------------------------------------------	--------------------------------------------	
+		players.push(newPlayer)
+		availablePlayers.push(newPlayer)
 
-// ----	--------------------------------------------	--------------------------------------------	
-// ----	--------------------------------------------	--------------------------------------------	
+		util.log(`New player has joined: ${playerName}`)
+		pairAvailablePlayers()
+	}
 
-set_game_sock_handlers = function (socket) {
+	const onTurn = (socket, data = {}) => {
+		if (!socket.player || !socket.player.opp) {
+			return
+		}
 
-	// util.log("New game player has connected: "+socket.id);
+		io.to(socket.player.opp.sockid).emit('opp_turn', { cell_id: data.cell_id })
+		util.log(`turn  --  usr:${socket.player.mode} - :${socket.player.name}  --  cell_id:${data.cell_id}`)
+	}
 
-	socket.on("new player", onNewPlayer);
+	const onClientDisconnect = (socket) => {
+		const player = socket.player
+		if (!player) {
+			return
+		}
 
-	socket.on("ply_turn", onTurn);
+		removePlayerFrom(players, player)
+		removePlayerFrom(availablePlayers, player)
 
-	socket.on("disconnect", onClientDisconnect);
+		if (player.opp) {
+			player.opp.status = 'looking'
+			player.opp.opp = null
+			if (!availablePlayers.includes(player.opp)) {
+				availablePlayers.push(player.opp)
+			}
+		}
 
-};
+		util.log(`Player has disconnected: ${socket.id}`)
+		pairAvailablePlayers()
+	}
+
+	return (socket) => {
+		util.log(`New game player has connected: ${socket.id}`)
+
+		socket.on('new player', (data) => onNewPlayer(socket, data))
+		socket.on('ply_turn', (data) => onTurn(socket, data))
+		socket.on('disconnect', () => onClientDisconnect(socket))
+	}
+}
+
+module.exports = (io) => {
+	const registerHandlers = createGame(io)
+	io.on('connection', registerHandlers)
+}

@@ -1,7 +1,15 @@
 import superagent from 'superagent'
 import X2JS from 'x2js'
+import app from 'ampersand-app'
 
-import '../../static/ws_conf.xml'
+const resolveConfUrl = () => {
+	const base = (import.meta.env && import.meta.env.BASE_URL) ? import.meta.env.BASE_URL : '/'
+	let normalizedBase = base.startsWith('/') ? base : `/${base}`
+	if (!normalizedBase.endsWith('/')) {
+		normalizedBase = `${normalizedBase}/`
+	}
+	return new URL('ws_conf.xml', `${window.location.origin}${normalizedBase}`).toString()
+}
 
 const prep_env = function (ca) {
 
@@ -16,10 +24,10 @@ const prep_env = function (ca) {
 // ---- --------------------------------------------  --------------------------------------------  
 
 	function load_conf () {
-	    // console.log("conf_file", conf_file)
+		const confUrl = resolveConfUrl()
 
 		superagent
-			.get(conf_file)
+			.get(confUrl)
 			.end(function(err, res){
 
 				if (err || !res.ok) {

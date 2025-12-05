@@ -1,5 +1,6 @@
 import React, {Component} from 'react'
 import jquery from 'jquery'
+import app from 'ampersand-app'
 
 export default class MessageBar extends Component {
 

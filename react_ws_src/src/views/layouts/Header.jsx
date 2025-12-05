@@ -1,8 +1,9 @@
 import React, {Component} from 'react'
 import { Link } from 'react-router'
+import app from 'ampersand-app'
 // import jquery from 'jquery'
 
-import MessageBar from '../layouts/MessageBar'
+import MessageBar from '../layouts/MessageBar.jsx'
 
 export default class Header extends Component {
 

@@ -1,5 +1,6 @@
 import React, {Component} from 'react'
 import { Link } from 'react-router'
+import app from 'ampersand-app'
 
 // import X_logo from '../../../static/images/X_logo.png'
 

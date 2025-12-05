@@ -1,45 +1,40 @@
-# A simple example of a full multiplayer game web app built with React.js and Node.js stack
+# X Tic-Tac-Toe — Multiplayer Demo
 
-Major libraries used on front end:
-- react
-- webpack
-- babel
+A simple multiplayer Tic-Tac-Toe web app built with **React** and **Node.js**.
+
+## Tech Stack
+
+### Front End (`react_ws_src/`)
+- React 15
+- Vite 5
+- Babel 7
 - react-router
-- ampersand
-- sass
-- jest
+- ampersand-app
+- Sass (dart-sass)
+- Jest
 
-Major libraries used on server:
-- node.js
-- socket.io
-- express
-
-### Folder structure:
-- **WS** - server side and compiled front end
-- **react_ws_src** - React development source and testing
+### Server (`WS/`)
+- Node.js / Express
+- Socket.IO 4
 
 ---
 
-### View it online at 
-https://x-ttt.herokuapp.com/
-
-#### Configurable with external XML file - 
-https://x-ttt.herokuapp.com/ws_conf.xml
-
----
-
-##For demonstration purposes only.
+## Folder Structure
+| Path | Description |
+|------|-------------|
+| `WS/` | Socket server & compiled front-end assets |
+| `react_ws_src/` | React source, dev tooling & tests |
 
 ---
 
 ## Requirements
-- Node.js 16.x (LTS) or newer with the bundled npm
-- Two terminal sessions (React dev server and Node socket server run independently)
+- **Node.js 22+** (tested with v22.16)
+- Two terminal sessions (client dev server and socket server run independently)
 
-## Install dependencies
+## Install Dependencies
 ```bash
-nvm install 16
-nvm use 16
+nvm install 22
+nvm use 22
 
 cd react_ws_src
 npm install
@@ -48,45 +43,73 @@ cd ../WS
 npm install
 ```
 
-## Run locally
-1. **React client** – from `react_ws_src` run `npm start` and open `http://localhost:3000` (webpack dev server with hot reload).
-2. **Socket server** – from `WS` run `npm start`. The server listens on `PORT` (defaults to `3001`) and serves everything under `WS/public`.
+## Run Locally
+1. **React client** – from `react_ws_src`:
+   ```bash
+   npm run dev
+   ```
+   Opens at `http://localhost:3000` (Vite dev server with hot reload).
 
-## WS server endpoints
+2. **Socket server** – from `WS`:
+   ```bash
+   npm start
+   ```
+   Listens on `PORT` (defaults to `3001`) and serves static files from `WS/public`.
+
+---
+
+## Configuration
+Site settings (GA tracking, socket URL, menus, pages) live in `static/ws_conf.xml` and are fetched at runtime.
+
+---
+
+## WS Server Endpoints
 
 ### HTTP
-- `GET /` and all other asset paths are served via `express.static(__dirname + '/public')` inside `WS/Xttt.js`. Anything you copy into `WS/public` becomes directly reachable (for example `GET /ws_conf.xml`, `GET /images/*.png`, etc.). There are no custom REST controllers — only static hosting behind Express.
+All paths are served via `express.static` from `WS/public`. Copy built assets there for production.
 
-### Socket.io events
-**Client → server**
-- `new player` (`WS/XtttGame.js:onNewPlayer`) – expects at least `{ name }`. Creates a `Player`, tracks it in the global lobby, and immediately calls `pair_avail_players()` so two waiting users are matched.
-- `ply_turn` (`WS/XtttGame.js:onTurn`) – payload `{ cell_id }`. The handler relays the move to the opponent’s socket and logs the action.
-- `disconnect` (`WS/XtttGame.js:onClientDisconnect`) – built-in event. Removes the socket’s `Player` from both `players` and `players_avail`, logging whether it was an admin or a user socket.
+### Socket.IO Events
+| Direction | Event | Payload | Description |
+|-----------|-------|---------|-------------|
+| Client → Server | `new player` | `{ name }` | Registers player and attempts pairing |
+| Client → Server | `ply_turn` | `{ cell_id }` | Sends move to opponent |
+| Client → Server | `disconnect` | — | Cleans up player state |
+| Server → Client | `pair_players` | `{ opp: { name, uid }, mode }` | Notifies both players of match (`mode`: `'m'` = first, `'s'` = second) |
+| Server → Client | `opp_turn` | `{ cell_id }` | Relays opponent's move |
 
-**Server → client**
-- `pair_players` (emitted inside `pair_avail_players()` in `WS/XtttGame.js`) – sent to each matched socket with `{ opp: { name, uid }, mode }`, where mode is `'m'` for the player who starts and `'s'` for the second. Establishes opponent metadata on the client.
-- `opp_turn` (emitted from `onTurn`) – includes `{ cell_id }` so the opponent mirrors the move on their board.
+---
 
-## Production build
+## Production Build
 1. Build the React bundle:
    ```bash
    cd react_ws_src
    npm run build
    ```
-2. Copy the generated assets into the server’s public folder. On Linux/macOS:
+2. Copy output to the server's public folder:
    ```bash
    cp -r dist/* ../WS/public/
    cp -r static/* ../WS/public/
    ```
-   On Windows you can use the helper scripts: `npm run bc` (copy all) or `npm run bu` (only update bundle/style).
-3. Start the Node socket server from `WS`:
+3. Start the server:
    ```bash
    cd WS
    PORT=3001 npm start
    ```
 
-## Testing & linting
-- Client unit tests: `cd react_ws_src && npm test`
-- Client linting: `cd react_ws_src && npm run lint`
+---
 
-Run tests before copying the bundle so the code under `WS/public` always matches the server you deploy.
+## Testing & Linting
+```bash
+cd react_ws_src
+npm test        # Jest unit tests
+npm run lint    # ESLint
+```
+
+---
+
+## Deployment
+The server is Vercel/Heroku-ready (Node 22 engine declared in both `package.json` files). Set the `PORT` env var if needed.
+
+---
+
+*For demonstration purposes only.*
