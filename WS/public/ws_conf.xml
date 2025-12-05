@@ -26,7 +26,8 @@
 		<SCRIPT__contact_form		u='e/s'	/>
 
 
-		<SOCKET__io		u='http://localhost:3001'	/>
+		<!-- For local dev, use u='http://localhost:3001'. For production, remove or leave empty to use same origin -->
+		<SOCKET__io		/>
 	</loc>
 
 <!--	========================	========================	========================	-->

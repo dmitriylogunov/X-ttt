@@ -56,6 +56,8 @@ npm install
    ```
    Listens on `PORT` (defaults to `3001`) and serves static files from `WS/public`.
 
+> **Socket URL auto-detection:** The client automatically connects to `localhost:3001` during local development and to the same origin in production. You can override this by setting the `u` attribute on `<SOCKET__io>` in `ws_conf.xml`.
+
 ---
 
 ## Configuration

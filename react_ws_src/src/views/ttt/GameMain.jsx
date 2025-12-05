@@ -58,7 +58,9 @@ export default class SetName extends Component {
 
 	sock_start () {
 
-		this.socket = io(app.settings.ws_conf.loc.SOCKET__io.u);
+		// Use configured URL if available, otherwise connect to same origin
+		const configuredUrl = app.settings.ws_conf.loc.SOCKET__io && app.settings.ws_conf.loc.SOCKET__io.u
+		this.socket = configuredUrl ? io(configuredUrl) : io()
 
 		this.socket.on('connect', function(data) { 
 			// console.log('socket connected', data)
