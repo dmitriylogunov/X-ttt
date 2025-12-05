@@ -12,11 +12,18 @@ const io = new Server(server, {
 		origin: '*',
 		methods: ['GET', 'POST']
 	},
-	// Use websocket only (persistent connection, no polling)
-	transports: ['websocket']
+	// Allow both transports for better compatibility with platforms like Render
+	transports: ['websocket', 'polling'],
+	// Be explicit about path
+	path: '/socket.io/'
 })
 
 const port = process.env.PORT || 3001
+
+// Health check endpoint for Render
+app.get('/health', (req, res) => {
+	res.status(200).send('OK')
+})
 
 app.use(express.static(path.join(__dirname, 'public')))
 

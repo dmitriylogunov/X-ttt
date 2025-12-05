@@ -60,7 +60,15 @@ export default class SetName extends Component {
 
 		// Use configured URL if available, otherwise connect to same origin
 		const configuredUrl = app.settings.ws_conf.loc.SOCKET__io && app.settings.ws_conf.loc.SOCKET__io.u
-		const socketOptions = { transports: ['websocket'] }
+		const socketOptions = {
+			// Allow both transports for better compatibility with platforms like Render
+			transports: ['websocket', 'polling'],
+			// Retry logic for cold starts on free tier hosting
+			reconnection: true,
+			reconnectionAttempts: 10,
+			reconnectionDelay: 1000,
+			reconnectionDelayMax: 5000
+		}
 		this.socket = configuredUrl ? io(configuredUrl, socketOptions) : io(socketOptions)
 
 		this.socket.on('connect', function(data) { 
