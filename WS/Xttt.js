@@ -12,8 +12,8 @@ const io = new Server(server, {
 		origin: '*',
 		methods: ['GET', 'POST']
 	},
-	// Allow both polling and websocket transports
-	transports: ['polling', 'websocket']
+	// Use websocket only (persistent connection, no polling)
+	transports: ['websocket']
 })
 
 const port = process.env.PORT || 3001

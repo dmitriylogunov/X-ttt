@@ -60,7 +60,8 @@ export default class SetName extends Component {
 
 		// Use configured URL if available, otherwise connect to same origin
 		const configuredUrl = app.settings.ws_conf.loc.SOCKET__io && app.settings.ws_conf.loc.SOCKET__io.u
-		this.socket = configuredUrl ? io(configuredUrl) : io()
+		const socketOptions = { transports: ['websocket'] }
+		this.socket = configuredUrl ? io(configuredUrl, socketOptions) : io(socketOptions)
 
 		this.socket.on('connect', function(data) { 
 			// console.log('socket connected', data)
