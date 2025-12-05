@@ -36,9 +36,12 @@ const renderSite = (historyInstance) => {
 
 				<IndexRoute components={{mainContent: Ttt}} />
 
-				<Route path='/pg/(:page)' components={{mainContent: Txt_page}} />
-
+				<Route path='/single' components={{mainContent: Ttt}} />
+				<Route path='/multi' components={{mainContent: Ttt}} />
+				<Route path='/about' components={{mainContent: Ttt}} />
 				<Route path='/ttt' components={{mainContent: Ttt}} />
+
+				<Route path='/pg/(:page)' components={{mainContent: Txt_page}} />
 
 				<Route path='/pupg/(:pu_page)' components={{popup: PopUp_page}} />
 

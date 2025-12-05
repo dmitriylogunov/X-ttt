@@ -1,51 +1,112 @@
-import React, { Component} from 'react'
-import { Link } from 'react-router'
+import React, { Component } from 'react'
 import app from 'ampersand-app'
 
 import SetName from './SetName.jsx'
 import GameMain from './GameMain.jsx'
 
+const STORAGE_KEY = 'ttt_player_name'
+
 export default class Ttt extends Component {
 
-	constructor (props) {
-		super(props)
+	constructor (props, context) {
+		super(props, context)
+
+		// Load saved name from localStorage
+		const savedName = localStorage.getItem(STORAGE_KEY)
+		if (savedName) {
+			app.settings.curr_user = { name: savedName }
+		}
 
 		this.state = {
-			game_step: 'main_menu',
-			game_type: null
+			needsName: false
 		}
 	}
 
 //	------------------------	------------------------	------------------------
 
+	getCurrentPath () {
+		// Get path from context router or window.location
+		if (this.context.router && this.context.router.location) {
+			return this.context.router.location.pathname
+		}
+		// Fallback: parse from window.location
+		const base = (typeof __BASE__ !== 'undefined' && __BASE__) || ''
+		let path = window.location.pathname
+		if (base && path.startsWith(base)) {
+			path = path.slice(base.length) || '/'
+		}
+		return path
+	}
+
+//	------------------------	------------------------	------------------------
+
 	render () {
+		const path = this.getCurrentPath()
+		const { needsName } = this.state
 
-		const {game_step} = this.state
-
-		console.log(game_step)
-
-		return (
-			<section id='TTT_game'>
-				{game_step == 'main_menu' && this.renderMainMenu()}
-
-				{game_step == 'set_name' && <SetName 
-													onSetName={this.saveUserName.bind(this)}
-													onBack={this.backToMenu.bind(this)}
-											/>}
-
-				{game_step == 'about' && this.renderAbout()}
-
-				{game_step == 'start_game' && 
+		// Route: /single
+		if (path === '/single') {
+			app.settings.curr_user = { name: localStorage.getItem(STORAGE_KEY) || 'Player' }
+			return (
+				<section id='TTT_game'>
 					<div>
-						{app.settings.curr_user && app.settings.curr_user.name && 
-							<h2>Welcome, {app.settings.curr_user.name}</h2>
-						}
+						<h2>Welcome, {app.settings.curr_user.name}</h2>
 						<GameMain 
-							game_type={this.state.game_type}
-							onEndGame={this.gameEnd.bind(this)} 
+							game_type='comp'
+							onEndGame={this.handleGameEnd.bind(this)} 
 						/>
 					</div>
-				}
+				</section>
+			)
+		}
+
+		// Route: /multi
+		if (path === '/multi') {
+			const savedName = localStorage.getItem(STORAGE_KEY)
+			
+			if (!savedName && !needsName) {
+				// Show name input
+				return (
+					<section id='TTT_game'>
+						<SetName 
+							onSetName={this.handleSetName.bind(this)}
+							onBack={this.goToMenu.bind(this)}
+							savedName=''
+						/>
+					</section>
+				)
+			}
+			
+			if (savedName) {
+				app.settings.curr_user = { name: savedName }
+			}
+			
+			return (
+				<section id='TTT_game'>
+					<div>
+						<h2>Welcome, {app.settings.curr_user.name}</h2>
+						<GameMain 
+							game_type='live'
+							onEndGame={this.handleGameEnd.bind(this)} 
+						/>
+					</div>
+				</section>
+			)
+		}
+
+		// Route: /about
+		if (path === '/about') {
+			return (
+				<section id='TTT_game'>
+					{this.renderAbout()}
+				</section>
+			)
+		}
+
+		// Default: main menu
+		return (
+			<section id='TTT_game'>
+				{this.renderMainMenu()}
 			</section>
 		)
 	}
@@ -59,15 +120,27 @@ export default class Ttt extends Component {
 					<h1 className='game-title'>Tic Tac Toe</h1>
 
 					<div className='menu-options'>
-						<button type='button' onClick={this.startSingleplayer.bind(this)} className='button long menu-btn'>
+						<button 
+							type='button' 
+							onClick={() => this.navigate('/single')} 
+							className='button long menu-btn'
+						>
 							<span>Singleplayer <span className='fa fa-user'></span></span>
 						</button>
 
-						<button type='button' onClick={this.startMultiplayer.bind(this)} className='button long menu-btn'>
+						<button 
+							type='button' 
+							onClick={() => this.navigate('/multi')} 
+							className='button long menu-btn'
+						>
 							<span>Multiplayer <span className='fa fa-users'></span></span>
 						</button>
 
-						<button type='button' onClick={this.showAbout.bind(this)} className='button long menu-btn'>
+						<button 
+							type='button' 
+							onClick={() => this.navigate('/about')} 
+							className='button long menu-btn'
+						>
 							<span>About <span className='fa fa-info-circle'></span></span>
 						</button>
 					</div>
@@ -97,7 +170,7 @@ export default class Ttt extends Component {
 					<p>This is a demonstration project for educational purposes only.</p>
 				</div>
 
-				<button type='button' onClick={this.backToMenu.bind(this)} className='button'>
+				<button type='button' onClick={this.goToMenu.bind(this)} className='button'>
 					<span><span className='fa fa-caret-left'></span> Back</span>
 				</button>
 			</div>
@@ -106,59 +179,36 @@ export default class Ttt extends Component {
 
 //	------------------------	------------------------	------------------------
 
-	startSingleplayer () {
-		app.settings.curr_user = { name: 'Player' }
-		this.setState({
-			game_type: 'comp',
-			game_step: 'start_game'
-		})
+	navigate (path) {
+		if (this.context.router) {
+			this.context.router.push(path)
+		} else if (app.history) {
+			app.history.push(path)
+		}
+		// Force re-render
+		this.forceUpdate()
 	}
 
 //	------------------------	------------------------	------------------------
 
-	startMultiplayer () {
-		this.setState({
-			game_type: 'live',
-			game_step: 'set_name'
-		})
+	goToMenu () {
+		this.setState({ needsName: false })
+		this.navigate('/')
 	}
 
 //	------------------------	------------------------	------------------------
 
-	showAbout () {
-		this.setState({
-			game_step: 'about'
-		})
+	handleSetName (name) {
+		// Save to localStorage
+		localStorage.setItem(STORAGE_KEY, name)
+		app.settings.curr_user = { name }
+		this.setState({ needsName: true })
 	}
 
 //	------------------------	------------------------	------------------------
 
-	backToMenu () {
-		this.setState({
-			game_step: 'main_menu',
-			game_type: null
-		})
-	}
-
-//	------------------------	------------------------	------------------------
-
-	saveUserName (n) {
-		app.settings.curr_user = {}
-		app.settings.curr_user.name = n
-
-		this.setState({
-			game_step: 'start_game'
-		})
-	}
-
-//	------------------------	------------------------	------------------------
-
-	gameEnd (t) {
-		this.setState({
-			game_type: null,
-			game_step: 'main_menu'
-		})
-		app.settings.curr_user = null
+	handleGameEnd () {
+		this.navigate('/')
 	}
 
 }
@@ -170,5 +220,5 @@ Ttt.propTypes = {
 }
 
 Ttt.contextTypes = {
-  router: React.PropTypes.object.isRequired
+	router: React.PropTypes.object.isRequired
 }

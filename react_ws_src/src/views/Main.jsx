@@ -5,6 +5,7 @@ export default class Main extends Component {
 
 	render () {
 		const { popup, mainContent } = this.props
+			
 		return (
 			<div style={fullHeight}>
 				<MainContent>

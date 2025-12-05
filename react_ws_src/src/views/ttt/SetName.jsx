@@ -5,7 +5,9 @@ export default class SetName extends Component {
 	constructor (props) {
 		super(props)
 
-		this.state = {}
+		this.state = {
+			name: props.savedName || ''
+		}
 	}
 
 //	------------------------	------------------------	------------------------
@@ -16,9 +18,15 @@ export default class SetName extends Component {
 
 				<h1>Enter Your Name</h1>
 
-				<div ref='nameHolder' className='input_holder left'>
+				<div className='input_holder left'>
 					<label>Name </label>
-					<input ref='name' type='text' className='input name' placeholder='Enter your name' />
+					<input 
+						type='text' 
+						className='input name' 
+						placeholder='Enter your name'
+						value={this.state.name}
+						onChange={this.handleNameChange.bind(this)}
+					/>
 				</div>
 
 				<div className='button-row'>
@@ -37,8 +45,14 @@ export default class SetName extends Component {
 
 //	------------------------	------------------------	------------------------
 
+	handleNameChange (e) {
+		this.setState({ name: e.target.value })
+	}
+
+//	------------------------	------------------------	------------------------
+
 	saveName (e) {
-		const name = this.refs.name.value.trim()
+		const name = this.state.name.trim()
 		if (name) {
 			this.props.onSetName(name)
 		}
