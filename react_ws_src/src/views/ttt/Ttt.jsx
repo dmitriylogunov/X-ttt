@@ -64,21 +64,17 @@ export default class Ttt extends Component {
 		if (path === '/multi') {
 			const savedName = localStorage.getItem(STORAGE_KEY)
 			
-			if (!savedName && !needsName) {
-				// Show name input
+			if (!needsName) {
+				// Show name input (pre-filled with saved name if exists)
 				return (
 					<section id='TTT_game'>
 						<SetName 
 							onSetName={this.handleSetName.bind(this)}
 							onBack={this.goToMenu.bind(this)}
-							savedName=''
+							savedName={savedName || ''}
 						/>
 					</section>
 				)
-			}
-			
-			if (savedName) {
-				app.settings.curr_user = { name: savedName }
 			}
 			
 			return (
