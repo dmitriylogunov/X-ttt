@@ -9,8 +9,11 @@ const app = express()
 const server = http.createServer(app)
 const io = new Server(server, {
 	cors: {
-		origin: '*'
-	}
+		origin: '*',
+		methods: ['GET', 'POST']
+	},
+	// Allow both polling and websocket transports
+	transports: ['polling', 'websocket']
 })
 
 const port = process.env.PORT || 3001
@@ -18,12 +21,13 @@ const port = process.env.PORT || 3001
 app.use(express.static(path.join(__dirname, 'public')))
 
 // Catch-all: serve index.html for client-side routing
+// Note: Socket.IO attaches to the http server, not Express, so it handles /socket.io before this
 app.get('*', (req, res) => {
 	res.sendFile(path.join(__dirname, 'public', 'index.html'))
 })
 
 registerGameHandlers(io)
 
-server.listen(port, () => {
+server.listen(port, '0.0.0.0', () => {
 	console.log('Server listening at port %d', port)
 })
