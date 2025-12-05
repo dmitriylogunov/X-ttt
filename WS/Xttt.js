@@ -17,6 +17,11 @@ const port = process.env.PORT || 3001
 
 app.use(express.static(path.join(__dirname, 'public')))
 
+// Catch-all: serve index.html for client-side routing
+app.get('*', (req, res) => {
+	res.sendFile(path.join(__dirname, 'public', 'index.html'))
+})
+
 registerGameHandlers(io)
 
 server.listen(port, () => {
