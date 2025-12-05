@@ -1,8 +1,8 @@
 import React from 'react'
 import app from 'ampersand-app'
 import { render } from 'react-dom'
-import { Router, Route, IndexRoute } from 'react-router'
-import { createHistory, useBasename } from 'history'
+import { Router, Route, IndexRoute, useRouterHistory } from 'react-router'
+import { createHistory } from 'history'
 import ga from 'react-ga'
 
 import './sass/main.scss'
@@ -21,10 +21,17 @@ import prep_env from './models/prep_env'
 
 let historyRef = null
 
+const createAppHistory = () => {
+	const baseDir = (import.meta.env && import.meta.env.BASE_URL) ? import.meta.env.BASE_URL : '/'
+	const normalizedBase = baseDir === '/' ? '/' : baseDir.replace(/\/$/, '') || '/'
+	return useRouterHistory(createHistory)({
+		basename: normalizedBase
+	})
+}
+
 const renderSite = (historyInstance) => {
-	const resolvedHistory = historyInstance || createHistory()
 	return render((
-		<Router history={resolvedHistory}>
+		<Router history={historyInstance}>
 			<Route path='/' component={Main}>
 
 				<IndexRoute components={{mainContent: Ttt}} />
@@ -89,11 +96,7 @@ app.extend({
 	},
 
 	start () {
-		const baseDir = (import.meta.env && import.meta.env.BASE_URL) ? import.meta.env.BASE_URL : '/'
-		const normalizedBase = baseDir === '/' ? '/' : baseDir.replace(/\/$/, '') || '/'
-		this.history = useBasename(createHistory)({
-			basename: normalizedBase
-		})
+		this.history = createAppHistory()
 		historyRef = this.history
 
 		this.start_ga()
