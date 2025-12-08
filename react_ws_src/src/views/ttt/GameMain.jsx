@@ -155,7 +155,9 @@ export default class SetName extends Component {
 					</div>
 
 					<div className="game-controls">
-						<button type='submit' onClick={this.end_game.bind(this)} className='button'><span>End Game <span className='fa fa-caret-right'></span></span></button>
+						<button type='button' onClick={this.end_game.bind(this)} className='button'>
+							<span><span className='fa fa-caret-left'></span> Back</span>
+						</button>
 					</div>
 				</div>
 

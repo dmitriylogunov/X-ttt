@@ -80,7 +80,7 @@ export default class Ttt extends Component {
 						<h2>Welcome, {app.settings.curr_user.name}</h2>
 						<GameMain 
 							game_type='comp'
-							onEndGame={this.handleGameEnd.bind(this)} 
+							onEndGame={this.goToMenu.bind(this)} 
 						/>
 					</div>
 				</section>
@@ -110,7 +110,7 @@ export default class Ttt extends Component {
 						<h2>Welcome, {app.settings.curr_user.name}</h2>
 						<GameMain 
 							game_type='live'
-							onEndGame={this.handleGameEnd.bind(this)} 
+							onEndGame={this.goToNameEntry.bind(this)} 
 						/>
 					</div>
 				</section>
@@ -155,6 +155,12 @@ export default class Ttt extends Component {
 	goToMenu () {
 		this.setState({ needsName: false })
 		this.navigate('/')
+	}
+
+//	------------------------	------------------------	------------------------
+
+	goToNameEntry () {
+		this.setState({ needsName: false })
 	}
 
 //	------------------------	------------------------	------------------------
