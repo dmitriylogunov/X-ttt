@@ -1,6 +1,6 @@
 import React from 'react'
 
-const GameStat = ({ gameType, gameStat, gamePlay, nextTurnPly }) => {
+const GameStat = ({ gameType, gameStat, gamePlay, nextTurnPly, onRetry }) => {
 	const getDisplayMessage = () => {
 		const turnMsg = nextTurnPly ? 'Your turn' : 'Opponent turn'
 		
@@ -19,9 +19,19 @@ const GameStat = ({ gameType, gameStat, gamePlay, nextTurnPly }) => {
 		}
 	}
 
+	const showRetryButton = gameStat === 'Waiting timed out' || 
+		gameStat === 'Error' || 
+		gameStat === 'Opponent disconnected' ||
+		gameStat === 'Server Full'
+
 	return (
 		<div id="game_stat">
 			<div id="game_stat_msg">{getDisplayMessage()}</div>
+			{showRetryButton && onRetry && (
+				<button type="button" onClick={onRetry} className="button retry-button">
+					<span>Try Again</span>
+				</button>
+			)}
 		</div>
 	)
 }

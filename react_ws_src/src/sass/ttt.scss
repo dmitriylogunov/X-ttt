@@ -345,6 +345,11 @@ section#TTT_game{
 			@include font-size(20px);
 			color: $textMuted;
 		}
+
+		.retry-button {
+			margin-top: 20px;
+			display: inline-block;
+		}
 	}
 
 	// Game board with hover highlights and win animation

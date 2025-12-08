@@ -9,6 +9,8 @@ import rand_arr_elem from '../../helpers/rand_arr_elem'
 import rand_to_fro from '../../helpers/rand_to_fro'
 import GameStat from './GameStat'
 
+const WAITING_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
+
 export default class SetName extends Component {
 
 	constructor (props) {
@@ -89,11 +91,28 @@ export default class SetName extends Component {
 				game_stat: 'Waiting for the opponent'
 			})
 
+			// Start waiting timeout - disconnect after 5 minutes if no opponent found
+			this.waitingTimeout = setTimeout(() => {
+				if (this.state.game_stat === 'Waiting for the opponent') {
+					this.socket && this.socket.disconnect()
+					this.setState({
+						game_stat: 'Waiting timed out',
+						game_play: false
+					})
+				}
+			}, WAITING_TIMEOUT_MS)
+
 			this.socket.emit('new player', { name: app.settings.curr_user.name });
 
 		}.bind(this));
 
 		this.socket.on('connect_error', function() {
+			// Clear waiting timeout on error
+			if (this.waitingTimeout) {
+				clearTimeout(this.waitingTimeout)
+				this.waitingTimeout = null
+			}
+			this.socket && this.socket.disconnect()
 			this.setState({
 				game_stat: 'Error'
 			})
@@ -101,6 +120,12 @@ export default class SetName extends Component {
 
 		this.socket.on('pair_players', function(data) { 
 			// console.log('paired with ', data)
+
+			// Clear waiting timeout - opponent found
+			if (this.waitingTimeout) {
+				clearTimeout(this.waitingTimeout)
+				this.waitingTimeout = null
+			}
 
 			const playerSymbol = data.symbol || 'x'
 			const oppSymbol = playerSymbol === 'x' ? 'o' : 'x'
@@ -125,6 +150,12 @@ export default class SetName extends Component {
 
 		// Handle server full
 		this.socket.on('server_full', function(data) {
+			// Clear waiting timeout
+			if (this.waitingTimeout) {
+				clearTimeout(this.waitingTimeout)
+				this.waitingTimeout = null
+			}
+			this.socket && this.socket.disconnect()
 			this.setState({
 				game_stat: data.message || 'Server Full',
 				game_play: false
@@ -133,6 +164,12 @@ export default class SetName extends Component {
 
 		// Handle opponent disconnect
 		this.socket.on('opponent_disconnected', function(data) {
+			// Clear waiting timeout
+			if (this.waitingTimeout) {
+				clearTimeout(this.waitingTimeout)
+				this.waitingTimeout = null
+			}
+			this.socket && this.socket.disconnect()
 			this.setState({
 				game_stat: data.message || 'Opponent disconnected',
 				game_play: false
@@ -178,7 +215,11 @@ export default class SetName extends Component {
 //	------------------------	------------------------	------------------------
 
 	componentWillUnmount () {
-
+		// Clear waiting timeout
+		if (this.waitingTimeout) {
+			clearTimeout(this.waitingTimeout)
+			this.waitingTimeout = null
+		}
 		this.socket && this.socket.disconnect();
 	}
 
@@ -221,6 +262,7 @@ export default class SetName extends Component {
 						gameStat={this.state.game_stat}
 						gamePlay={this.state.game_play}
 						nextTurnPly={this.state.next_turn_ply}
+						onRetry={this.props.game_type === 'live' ? this.retry_connection.bind(this) : null}
 					/>
 
 					{showBoard && (
@@ -449,9 +491,32 @@ export default class SetName extends Component {
 //	------------------------	------------------------	------------------------
 
 	end_game () {
+		// Clear waiting timeout
+		if (this.waitingTimeout) {
+			clearTimeout(this.waitingTimeout)
+			this.waitingTimeout = null
+		}
 		this.socket && this.socket.disconnect();
 
 		this.props.onEndGame()
+	}
+
+//	------------------------	------------------------	------------------------
+
+	retry_connection () {
+		// Reset state for retry
+		this.setState({
+			cell_vals: {},
+			next_turn_ply: true,
+			game_play: false,
+			game_stat: 'Connecting',
+			opp_name: null,
+			playerSymbol: 'x',
+			oppSymbol: 'o'
+		}, () => {
+			// Start new socket connection
+			this.sock_start()
+		})
 	}
 
 

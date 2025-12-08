@@ -19,6 +19,14 @@ const getDisplayMessage = (gameType, gameStat, gamePlay, nextTurnPly) => {
 	}
 }
 
+// Logic for showing retry button
+const shouldShowRetryButton = (gameStat) => {
+	return gameStat === 'Waiting timed out' || 
+		gameStat === 'Error' || 
+		gameStat === 'Opponent disconnected' ||
+		gameStat === 'Server Full'
+}
+
 describe('GameStat logic', () => {
 	describe('Singleplayer mode', () => {
 		const gameType = 'computer'
@@ -85,6 +93,41 @@ describe('GameStat logic', () => {
 
 		it('shows "Draw" when game is a draw', () => {
 			expect(getDisplayMessage(gameType, 'Draw', false, true)).toBe('Draw')
+		})
+	})
+
+	describe('Retry button visibility', () => {
+		it('shows retry button when waiting timed out', () => {
+			expect(shouldShowRetryButton('Waiting timed out')).toBe(true)
+		})
+
+		it('shows retry button on error', () => {
+			expect(shouldShowRetryButton('Error')).toBe(true)
+		})
+
+		it('shows retry button when opponent disconnected', () => {
+			expect(shouldShowRetryButton('Opponent disconnected')).toBe(true)
+		})
+
+		it('shows retry button when server is full', () => {
+			expect(shouldShowRetryButton('Server Full')).toBe(true)
+		})
+
+		it('does not show retry button when waiting for opponent', () => {
+			expect(shouldShowRetryButton('Waiting for the opponent')).toBe(false)
+		})
+
+		it('does not show retry button when connecting', () => {
+			expect(shouldShowRetryButton('Connecting')).toBe(false)
+		})
+
+		it('does not show retry button when playing', () => {
+			expect(shouldShowRetryButton('Playing with John')).toBe(false)
+		})
+
+		it('does not show retry button on win/loss', () => {
+			expect(shouldShowRetryButton('You win')).toBe(false)
+			expect(shouldShowRetryButton('Opponent win')).toBe(false)
 		})
 	})
 })
