@@ -25,3 +25,7 @@ When making any code changes to this project:
 - Use existing patterns found in the codebase
 - Follow the established project structure
 - Preserve existing formatting conventions
+
+## Git Commits
+
+- Keep commit messages concise
