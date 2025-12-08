@@ -182,6 +182,7 @@ export default class Ttt extends Component {
 				<div className='about-content'>
 					<h2>License</h2>
 					<p>This project is licensed under <strong>Creative Commons</strong>.</p>
+					<p>Created by <a href="https://dmitriylogunov.info">Dmitriy Logunov</a>.</p>
 					
 					<h2>Original Author</h2>
 					<p>Originally created by <strong>Maxim Shklyar</strong> (<a href="https://github.com/xims/X-ttt" target="_blank" rel="noopener noreferrer">xims</a>)</p>
