@@ -3,6 +3,8 @@ import app from 'ampersand-app'
 
 import SetName from './SetName.jsx'
 import GameMain from './GameMain.jsx'
+import MainMenu from './MainMenu.jsx'
+import About from './About.jsx'
 
 const STORAGE_KEY = 'ttt_player_name'
 
@@ -119,7 +121,7 @@ export default class Ttt extends Component {
 		if (path === '/about') {
 			return (
 				<section id='TTT_game'>
-					{this.renderAbout()}
+					<About onBack={this.goToMenu.bind(this)} />
 				</section>
 			)
 		}
@@ -127,75 +129,8 @@ export default class Ttt extends Component {
 		// Default: main menu
 		return (
 			<section id='TTT_game'>
-				{this.renderMainMenu()}
+				<MainMenu onNavigate={this.navigate.bind(this)} />
 			</section>
-		)
-	}
-
-//	------------------------	------------------------	------------------------
-
-	renderMainMenu () {
-		return (
-			<div id='MainMenu'>
-				<div className='menu-center'>
-					<h1 className='game-title'>Tic Tac Toe</h1>
-
-					<div className='menu-options'>
-						<button 
-							type='button' 
-							onClick={() => this.navigate('/single')} 
-							className='button long menu-btn'
-						>
-							<span>Singleplayer <span className='fa fa-user'></span></span>
-						</button>
-
-						<button 
-							type='button' 
-							onClick={() => this.navigate('/multi')} 
-							className='button long menu-btn'
-						>
-							<span>Multiplayer <span className='fa fa-users'></span></span>
-						</button>
-
-						<button 
-							type='button' 
-							onClick={() => this.navigate('/about')} 
-							className='button long menu-btn'
-						>
-							<span>About <span className='fa fa-info-circle'></span></span>
-						</button>
-					</div>
-				</div>
-
-				<p className='game-subtitle'>A simple Tic Tac Toe game demo built with React.js and Node.js</p>
-			</div>
-		)
-	}
-
-//	------------------------	------------------------	------------------------
-
-	renderAbout () {
-		return (
-			<div id='AboutPage'>
-				<h1>About</h1>
-				
-				<div className='about-content'>
-					<h2>License</h2>
-					<p>This project is licensed under <strong>Creative Commons</strong>.</p>
-					<p>Created by <a href="https://dmitriylogunov.info">Dmitriy Logunov</a>.</p>
-					
-					<h2>Original Author</h2>
-					<p>Originally created by <strong>Maxim Shklyar</strong> (<a href="https://github.com/xims/X-ttt" target="_blank" rel="noopener noreferrer">xims</a>)</p>
-					<p>kisla interactive — <a href="http://www.kisla.com" target="_blank" rel="noopener noreferrer">kisla.com</a></p>
-				
-					<p>All rights reserved.</p>
-					<p>This is a demonstration project for educational purposes only.</p>
-				</div>
-
-				<button type='button' onClick={this.goToMenu.bind(this)} className='button'>
-					<span><span className='fa fa-caret-left'></span> Back</span>
-				</button>
-			</div>
 		)
 	}
 
