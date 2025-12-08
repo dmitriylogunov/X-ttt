@@ -76,13 +76,10 @@ export default class Ttt extends Component {
 			app.settings.curr_user = { name: localStorage.getItem(STORAGE_KEY) || 'Player' }
 			return (
 				<section id='TTT_game'>
-					<div>
-						<h2>Welcome, {app.settings.curr_user.name}</h2>
-						<GameMain 
-							game_type='comp'
-							onEndGame={this.goToMenu.bind(this)} 
-						/>
-					</div>
+					<GameMain 
+						game_type='comp'
+						onEndGame={this.goToMenu.bind(this)} 
+					/>
 				</section>
 			)
 		}
@@ -106,13 +103,10 @@ export default class Ttt extends Component {
 			
 			return (
 				<section id='TTT_game'>
-					<div>
-						<h2>Welcome, {app.settings.curr_user.name}</h2>
-						<GameMain 
-							game_type='live'
-							onEndGame={this.goToNameEntry.bind(this)} 
-						/>
-					</div>
+					<GameMain 
+						game_type='live'
+						onEndGame={this.goToNameEntry.bind(this)} 
+					/>
 				</section>
 			)
 		}
