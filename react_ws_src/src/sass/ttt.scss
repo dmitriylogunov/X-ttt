@@ -275,6 +275,10 @@ section#TTT_game{
 			text-shadow: 0 0 20px rgba($colorAccent, 0.4);
 			text-transform: uppercase;
 			letter-spacing: 2px;
+
+			.vs {
+				text-transform: lowercase;
+			}
 		}
 
 		.game-area {

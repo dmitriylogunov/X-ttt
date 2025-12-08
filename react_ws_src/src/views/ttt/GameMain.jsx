@@ -124,7 +124,7 @@ export default class SetName extends Component {
 		return (
 			<div id='GameMain'>
 
-				<h1>Play {this.props.game_type}</h1>
+				<h1>Play <span className="vs">vs</span> {this.props.game_type}</h1>
 
 				<div className="game-area">
 					<div id="game_stat">
