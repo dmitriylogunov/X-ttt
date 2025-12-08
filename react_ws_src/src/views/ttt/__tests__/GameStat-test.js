@@ -59,8 +59,8 @@ describe('GameStat logic', () => {
 			expect(getDisplayMessage(gameType, 'Connecting', false, true)).toBe('Connecting')
 		})
 
-		it('shows "Waiting for opponent" after connection established', () => {
-			expect(getDisplayMessage(gameType, 'Waiting for opponent', false, true)).toBe('Waiting for opponent')
+		it('shows "Waiting for the opponent" after connection established', () => {
+			expect(getDisplayMessage(gameType, 'Waiting for the opponent', false, true)).toBe('Waiting for the opponent')
 		})
 
 		it('shows "Error" when connection fails', () => {

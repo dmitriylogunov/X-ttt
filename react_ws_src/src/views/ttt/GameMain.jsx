@@ -86,7 +86,7 @@ export default class SetName extends Component {
 			// console.log('socket connected', data)
 
 			this.setState({
-				game_stat: 'Waiting for opponent'
+				game_stat: 'Waiting for the opponent'
 			})
 
 			this.socket.emit('new player', { name: app.settings.curr_user.name });
