@@ -139,6 +139,30 @@ export default class SetName extends Component {
 			// This shouldn't happen in normal gameplay as client validates too
 		}.bind(this));
 
+		// Handle game over from server (winner/loser/draw)
+		this.socket.on('game_over', function(data) {
+			console.log('game_over event received:', data)
+			
+			// Highlight winning cells if any
+			if (data.winningCells && data.winningCells.length === 3) {
+				console.log('Highlighting winning cells:', data.winningCells)
+				data.winningCells.forEach(cellId => {
+					if (this.refs[cellId]) {
+						this.refs[cellId].classList.add('win')
+					}
+				})
+				TweenMax.killAll(true)
+				TweenMax.from('td.win', 1, {opacity: 0, ease: Linear.easeIn})
+			}
+
+			this.setState({
+				game_stat: data.message,
+				game_play: false
+			})
+
+			this.socket && this.socket.disconnect();
+		}.bind(this));
+
 
 
 	}
@@ -342,12 +366,20 @@ export default class SetName extends Component {
 
 		const { cell_vals } = this.state
 
+		// For live games, server decides the winner - just toggle turns
+		if (this.props.game_type === 'live') {
+			this.setState({
+				next_turn_ply: !this.state.next_turn_ply
+			})
+			return
+		}
+
+		// Computer game - client-side winner detection
 		let win = false
 		let set
 		let fin = true
 
-		if (this.props.game_type!='live')
-			this.state.game_stat = 'Play'
+		this.state.game_stat = 'Play'
 
 
 		for (let i=0; !win && i<this.win_sets.length; i++) {
@@ -371,14 +403,11 @@ export default class SetName extends Component {
 			TweenMax.killAll(true)
 			TweenMax.from('td.win', 1, {opacity: 0, ease: Linear.easeIn})
 
-			// For live games, use playerSymbol; for comp games, player is always 'x'
-			const mySymbol = this.props.game_type === 'live' ? this.state.playerSymbol : 'x'
+			// For comp games, player is always 'x'
 			this.setState({
-				game_stat: (cell_vals[set[0]]==mySymbol?'You':'Opponent')+' win',
+				game_stat: (cell_vals[set[0]]=='x'?'You':'Opponent')+' win',
 				game_play: false
 			})
-
-			this.socket && this.socket.disconnect();
 
 		} else if (fin) {
 		
@@ -387,10 +416,8 @@ export default class SetName extends Component {
 				game_play: false
 			})
 
-			this.socket && this.socket.disconnect();
-
 		} else {
-			this.props.game_type!='live' && this.state.next_turn_ply && setTimeout(this.turn_comp.bind(this), rand_to_fro(500, 1000));
+			this.state.next_turn_ply && setTimeout(this.turn_comp.bind(this), rand_to_fro(500, 1000));
 
 			this.setState({
 				next_turn_ply: !this.state.next_turn_ply

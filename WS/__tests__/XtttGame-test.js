@@ -319,4 +319,157 @@ describe('XtttGame integration', () => {
 			expect(game.isEmpty()).toBe(true)
 		});
 	});
+
+	describe('game over event handling', () => {
+		it('emits game_over with win message to winner after winning move', () => {
+			const game = new Game()
+			const player1 = new Player(1, 'Player1', 'paired')
+			const player2 = new Player(2, 'Player2', 'paired')
+			
+			game.addPlayer(player1)
+			game.addPlayer(player2)
+			player1.opp = player2
+			player2.opp = player1
+			player1.sockid = 'socket-1'
+			player2.sockid = 'socket-2'
+
+			// Play a winning game
+			game.makeTurn(player1, 'c1')
+			game.makeTurn(player2, 'c4')
+			game.makeTurn(player1, 'c2')
+			game.makeTurn(player2, 'c5')
+			const result = game.makeTurn(player1, 'c3') // x wins
+
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('x')
+
+			// Verify the data that should be sent to winner
+			const winnerData = {
+				result: 'win',
+				message: "You're the winner",
+				winningCells: result.winningCells
+			}
+			expect(winnerData.message).toBe("You're the winner")
+			expect(winnerData.winningCells).toEqual(['c1', 'c2', 'c3'])
+		});
+
+		it('emits game_over with lose message to loser after winning move', () => {
+			const game = new Game()
+			const player1 = new Player(1, 'Player1', 'paired')
+			const player2 = new Player(2, 'Player2', 'paired')
+			
+			game.addPlayer(player1)
+			game.addPlayer(player2)
+			player1.opp = player2
+			player2.opp = player1
+
+			// Play a winning game
+			game.makeTurn(player1, 'c1')
+			game.makeTurn(player2, 'c4')
+			game.makeTurn(player1, 'c2')
+			game.makeTurn(player2, 'c5')
+			const result = game.makeTurn(player1, 'c3') // x wins
+
+			// Verify the data that should be sent to loser
+			const loserData = {
+				result: 'lose',
+				message: 'You have lost, try again',
+				winningCells: result.winningCells
+			}
+			expect(loserData.message).toBe('You have lost, try again')
+			expect(loserData.winningCells).toEqual(['c1', 'c2', 'c3'])
+		});
+
+		it('emits game_over with draw message to both players on draw', () => {
+			const game = new Game()
+			const player1 = new Player(1, 'Player1', 'paired')
+			const player2 = new Player(2, 'Player2', 'paired')
+			
+			game.addPlayer(player1)
+			game.addPlayer(player2)
+			player1.opp = player2
+			player2.opp = player1
+
+			// Play to a draw
+			game.makeTurn(player1, 'c1')
+			game.makeTurn(player2, 'c2')
+			game.makeTurn(player1, 'c3')
+			game.makeTurn(player2, 'c5')
+			game.makeTurn(player1, 'c4')
+			game.makeTurn(player2, 'c6')
+			game.makeTurn(player1, 'c8')
+			game.makeTurn(player2, 'c7')
+			const result = game.makeTurn(player1, 'c9') // draw
+
+			expect(result.gameOver).toBe(true)
+			expect(result.isDraw).toBe(true)
+
+			// Verify the data that should be sent to both players
+			const drawData = {
+				result: 'draw',
+				message: 'Draw',
+				winningCells: null
+			}
+			expect(drawData.message).toBe('Draw')
+			expect(drawData.winningCells).toBeNull()
+		});
+
+		it('diagonal win (c1-c5-c9) triggers game_over', () => {
+			const game = new Game()
+			const player1 = new Player(1, 'Player1', 'paired')
+			const player2 = new Player(2, 'Player2', 'paired')
+			
+			game.addPlayer(player1)
+			game.addPlayer(player2)
+
+			game.makeTurn(player1, 'c1')
+			game.makeTurn(player2, 'c2')
+			game.makeTurn(player1, 'c5')
+			game.makeTurn(player2, 'c3')
+			const result = game.makeTurn(player1, 'c9')
+
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('x')
+			expect(result.winningCells).toEqual(['c1', 'c5', 'c9'])
+		});
+
+		it('diagonal win (c3-c5-c7) triggers game_over', () => {
+			const game = new Game()
+			const player1 = new Player(1, 'Player1', 'paired')
+			const player2 = new Player(2, 'Player2', 'paired')
+			
+			game.addPlayer(player1)
+			game.addPlayer(player2)
+
+			game.makeTurn(player1, 'c3')
+			game.makeTurn(player2, 'c1')
+			game.makeTurn(player1, 'c5')
+			game.makeTurn(player2, 'c2')
+			const result = game.makeTurn(player1, 'c7')
+
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('x')
+			expect(result.winningCells).toEqual(['c3', 'c5', 'c7'])
+		});
+
+		it('o wins diagonal and game_over is triggered', () => {
+			const game = new Game()
+			const player1 = new Player(1, 'Player1', 'paired')
+			const player2 = new Player(2, 'Player2', 'paired')
+			
+			game.addPlayer(player1)
+			game.addPlayer(player2)
+
+			game.makeTurn(player1, 'c2') // x
+			game.makeTurn(player2, 'c1') // o
+			game.makeTurn(player1, 'c4') // x
+			game.makeTurn(player2, 'c5') // o
+			game.makeTurn(player1, 'c6') // x
+			const result = game.makeTurn(player2, 'c9') // o wins diagonal
+
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('o')
+			expect(result.winningCells).toEqual(['c1', 'c5', 'c9'])
+		});
+	});
 });

@@ -113,11 +113,16 @@ const createGameManager = (io) => {
 	const onTurn = (socket, data = {}) => {
 		const player = socket.player
 		if (!player || !player.game || !player.opp) {
+			console.log('Turn rejected - missing player, game, or opponent')
 			return
 		}
 
 		const game = player.game
+		console.log(`Processing turn: ${player.name} (${player.symbol}) plays ${data.cell_id}`)
+		console.log(`Game field before turn:`, JSON.stringify(game.field))
+		
 		const result = game.makeTurn(player, data.cell_id)
+		console.log(`Turn result:`, JSON.stringify(result))
 
 		if (!result.valid) {
 			// Send error back to the player
@@ -129,6 +134,41 @@ const createGameManager = (io) => {
 		// Send the turn to the opponent
 		io.to(player.opp.sockid).emit('opp_turn', { cell_id: data.cell_id })
 		console.log(`turn  --  game:${game.code}  --  ${player.name} (${player.symbol})  --  cell_id:${data.cell_id}`)
+
+		// Check if game is over
+		if (result.gameOver) {
+			console.log(`Game over detected! Winner: ${result.winner}, Cells: ${result.winningCells}`)
+			const opponent = player.opp
+			
+			if (result.isDraw) {
+				// It's a draw
+				const drawData = {
+					result: 'draw',
+					message: 'Draw',
+					winningCells: null
+				}
+				io.to(socket.id).emit('game_over', drawData)
+				io.to(opponent.sockid).emit('game_over', drawData)
+				console.log(`game_over  --  game:${game.code}  --  DRAW`)
+			} else {
+				// We have a winner - the player who just made the turn
+				console.log(`Sending game_over to winner (${socket.id}) and loser (${opponent.sockid})`)
+				io.to(socket.id).emit('game_over', {
+					result: 'win',
+					message: "You're the winner",
+					winningCells: result.winningCells
+				})
+				io.to(opponent.sockid).emit('game_over', {
+					result: 'lose',
+					message: 'You have lost, try again',
+					winningCells: result.winningCells
+				})
+				console.log(`game_over  --  game:${game.code}  --  WINNER: ${player.name} (${player.symbol})`)
+			}
+
+			// Clean up the game
+			removeGameFromList(game)
+		}
 	}
 
 	const onClientDisconnect = (socket) => {

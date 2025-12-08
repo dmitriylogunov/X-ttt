@@ -178,7 +178,7 @@ module.exports = (io) => {
 
 ### 3. Game.js — Game Model
 
-**Purpose:** Server-side game state management with turn validation.
+**Purpose:** Server-side game state management with turn validation and winner detection.
 
 **Properties:**
 
@@ -189,6 +189,14 @@ module.exports = (io) => {
 | `players` | `Player[]` | Array of 1-2 players in this game |
 | `currentTurn` | `string` | `'x'` or `'o'` - whose turn it is |
 | `status` | `string` | `'waiting'`, `'playing'`, or `'finished'` |
+| `winner` | `string\|null` | `'x'`, `'o'`, or `null` (draw/not finished) |
+| `winningCells` | `string[]\|null` | Array of winning cell IDs or `null` |
+
+**Static Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `WIN_SETS` | `string[][]` | 8 winning combinations (rows, columns, diagonals) |
 
 **Methods:**
 
@@ -199,7 +207,8 @@ module.exports = (io) => {
 | `isFull()` | `boolean` | True if game has 2 players |
 | `isEmpty()` | `boolean` | True if game has no players |
 | `getOpponent(player)` | `Player\|null` | Get the other player |
-| `makeTurn(player, cellId)` | `{valid, error?}` | Validate and apply a turn |
+| `makeTurn(player, cellId)` | `{valid, error?, gameOver?, winner?, winningCells?, isDraw?}` | Validate turn, apply it, and check for winner |
+| `checkWinner()` | `{gameOver, winner?, winningCells?, isDraw?}` | Check if game is over |
 
 ---
 
@@ -256,12 +265,14 @@ sequenceDiagram
     A->>S: 'ply_turn' { cell_id: 'c5' }
     Note over S: Validate: x's turn, c5 is empty
     Note over S: Update field: c5 = 'x'
+    Note over S: Check winner - no winner yet
     Note over S: Switch turn to 'o'
     S->>B: 'opp_turn' { cell_id: 'c5' }
 
     B->>S: 'ply_turn' { cell_id: 'c1' }
     Note over S: Validate: o's turn, c1 is empty
     Note over S: Update field: c1 = 'o'
+    Note over S: Check winner - no winner yet
     Note over S: Switch turn to 'x'
     S->>A: 'opp_turn' { cell_id: 'c1' }
 
@@ -269,6 +280,40 @@ sequenceDiagram
     A->>S: 'ply_turn' { cell_id: 'c5' }
     Note over S: Validate fails: c5 is occupied
     S->>A: 'turn_error' { error: 'Invalid turn' }
+```
+
+### Game Over (Winner Detection)
+
+```mermaid
+sequenceDiagram
+    participant A as Client A (symbol: 'x')
+    participant S as Server
+    participant B as Client B (symbol: 'o')
+
+    Note over A,B: Assuming x has c1, c2 and o has c4, c5
+    A->>S: 'ply_turn' { cell_id: 'c3' }
+    Note over S: Validate and apply turn
+    Note over S: Check winner - x wins with [c1, c2, c3]
+    Note over S: Mark game as 'finished'
+    S->>A: 'game_over' { result: 'win', message: "You're the winner", winningCells: ['c1','c2','c3'] }
+    S->>B: 'game_over' { result: 'lose', message: 'You have lost, try again', winningCells: ['c1','c2','c3'] }
+    Note over S: Remove game from active games
+```
+
+### Draw Scenario
+
+```mermaid
+sequenceDiagram
+    participant A as Client A
+    participant S as Server
+    participant B as Client B
+
+    Note over A,B: Board almost full, no winner possible
+    A->>S: 'ply_turn' { cell_id: 'c9' }
+    Note over S: Apply turn, board now full
+    Note over S: Check winner - no winner, it's a draw
+    S->>A: 'game_over' { result: 'draw', message: 'Draw', winningCells: null }
+    S->>B: 'game_over' { result: 'draw', message: 'Draw', winningCells: null }
 ```
 
 ### Disconnection Handling

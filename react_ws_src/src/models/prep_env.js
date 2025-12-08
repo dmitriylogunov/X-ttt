@@ -41,7 +41,7 @@ const prep_env = function (ca) {
 
 				app.settings.ws_conf = conf_json.data
 				// console.log('loaded site configuration', app.settings.ws_conf)
-				console.log('loaded site configuration', app.settings.ws_conf.site.vals.year)
+				// console.log('loaded site configuration', app.settings.ws_conf.site.vals.year)
 
 				prep_site ()
 			});

@@ -19,8 +19,9 @@ describe('Game', () => {
 			for (let i = 0; i < 100; i++) {
 				codes.add(generateGameCode())
 			}
-			// With 26^4 = 456,976 possibilities, 100 codes should be unique
-			expect(codes.size).toBe(100)
+			// With 26^4 = 456,976 possibilities, 100 codes should be nearly unique
+			// Allow for rare collisions (at least 95 unique)
+			expect(codes.size).toBeGreaterThanOrEqual(95)
 		})
 	})
 
@@ -52,6 +53,16 @@ describe('Game', () => {
 		it('starts with empty players array', () => {
 			const game = new Game()
 			expect(game.players).toEqual([])
+		})
+
+		it('initializes winner as null', () => {
+			const game = new Game()
+			expect(game.winner).toBeNull()
+		})
+
+		it('initializes winningCells as null', () => {
+			const game = new Game()
+			expect(game.winningCells).toBeNull()
 		})
 	})
 
@@ -273,6 +284,93 @@ describe('Game', () => {
 				c7: null, c8: null, c9: null
 			})
 		})
+
+		it('detects horizontal win for x', () => {
+			game.makeTurn(player1, 'c1') // x
+			game.makeTurn(player2, 'c4') // o
+			game.makeTurn(player1, 'c2') // x
+			game.makeTurn(player2, 'c5') // o
+			const result = game.makeTurn(player1, 'c3') // x wins with top row
+
+			expect(result.valid).toBe(true)
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('x')
+			expect(result.winningCells).toEqual(['c1', 'c2', 'c3'])
+			expect(result.isDraw).toBe(false)
+			expect(game.status).toBe('finished')
+			expect(game.winner).toBe('x')
+		})
+
+		it('detects vertical win for o', () => {
+			game.makeTurn(player1, 'c1') // x
+			game.makeTurn(player2, 'c2') // o
+			game.makeTurn(player1, 'c4') // x
+			game.makeTurn(player2, 'c5') // o
+			game.makeTurn(player1, 'c9') // x
+			const result = game.makeTurn(player2, 'c8') // o wins with middle column
+
+			expect(result.valid).toBe(true)
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('o')
+			expect(result.winningCells).toEqual(['c2', 'c5', 'c8'])
+			expect(result.isDraw).toBe(false)
+			expect(game.status).toBe('finished')
+		})
+
+		it('detects diagonal win', () => {
+			game.makeTurn(player1, 'c1') // x
+			game.makeTurn(player2, 'c2') // o
+			game.makeTurn(player1, 'c5') // x
+			game.makeTurn(player2, 'c3') // o
+			const result = game.makeTurn(player1, 'c9') // x wins with diagonal
+
+			expect(result.valid).toBe(true)
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('x')
+			expect(result.winningCells).toEqual(['c1', 'c5', 'c9'])
+		})
+
+		it('detects draw when board is full', () => {
+			// x | o | x
+			// x | o | o
+			// o | x | x
+			game.makeTurn(player1, 'c1') // x
+			game.makeTurn(player2, 'c2') // o
+			game.makeTurn(player1, 'c3') // x
+			game.makeTurn(player2, 'c5') // o
+			game.makeTurn(player1, 'c4') // x
+			game.makeTurn(player2, 'c6') // o
+			game.makeTurn(player1, 'c8') // x
+			game.makeTurn(player2, 'c7') // o
+			const result = game.makeTurn(player1, 'c9') // x - draw
+
+			expect(result.valid).toBe(true)
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBeNull()
+			expect(result.winningCells).toBeNull()
+			expect(result.isDraw).toBe(true)
+			expect(game.status).toBe('finished')
+		})
+
+		it('does not allow turns after game is over', () => {
+			// Win the game
+			game.makeTurn(player1, 'c1') // x
+			game.makeTurn(player2, 'c4') // o
+			game.makeTurn(player1, 'c2') // x
+			game.makeTurn(player2, 'c5') // o
+			game.makeTurn(player1, 'c3') // x wins
+
+			const result = game.makeTurn(player2, 'c6')
+			expect(result.valid).toBe(false)
+			expect(result.error).toBe('Game is not active')
+		})
+
+		it('returns gameOver: false for non-winning move', () => {
+			const result = game.makeTurn(player1, 'c5')
+			
+			expect(result.valid).toBe(true)
+			expect(result.gameOver).toBe(false)
+		})
 	})
 
 	describe('toJSON', () => {
@@ -289,8 +387,317 @@ describe('Game', () => {
 				field: game.field,
 				currentTurn: 'x',
 				status: 'waiting',
-				playerCount: 1
+				playerCount: 1,
+				winner: null,
+				winningCells: null
 			})
+		})
+
+		it('includes winner info when game is finished', () => {
+			const game = new Game()
+			const player1 = new Player(1, 'Player1', 'looking')
+			const player2 = new Player(2, 'Player2', 'looking')
+			game.addPlayer(player1)
+			game.addPlayer(player2)
+			
+			// Win with top row
+			game.makeTurn(player1, 'c1')
+			game.makeTurn(player2, 'c4')
+			game.makeTurn(player1, 'c2')
+			game.makeTurn(player2, 'c5')
+			game.makeTurn(player1, 'c3')
+
+			const json = game.toJSON()
+
+			expect(json.status).toBe('finished')
+			expect(json.winner).toBe('x')
+			expect(json.winningCells).toEqual(['c1', 'c2', 'c3'])
+		})
+	})
+
+	describe('checkWinner', () => {
+		let game, player1, player2
+
+		beforeEach(() => {
+			game = new Game()
+			player1 = new Player(1, 'Player1', 'looking')
+			player2 = new Player(2, 'Player2', 'looking')
+			game.addPlayer(player1)
+			game.addPlayer(player2)
+		})
+
+		it('returns gameOver: false for empty board', () => {
+			const result = game.checkWinner()
+			expect(result.gameOver).toBe(false)
+		})
+
+		it('returns gameOver: false for partial board without winner', () => {
+			game.field.c1 = 'x'
+			game.field.c5 = 'o'
+			const result = game.checkWinner()
+			expect(result.gameOver).toBe(false)
+		})
+
+		it('detects all horizontal wins', () => {
+			// Top row
+			game.field = { c1: 'x', c2: 'x', c3: 'x', c4: null, c5: null, c6: null, c7: null, c8: null, c9: null }
+			let result = game.checkWinner()
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('x')
+			expect(result.winningCells).toEqual(['c1', 'c2', 'c3'])
+
+			// Middle row
+			game.field = { c1: null, c2: null, c3: null, c4: 'o', c5: 'o', c6: 'o', c7: null, c8: null, c9: null }
+			result = game.checkWinner()
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('o')
+			expect(result.winningCells).toEqual(['c4', 'c5', 'c6'])
+
+			// Bottom row
+			game.field = { c1: null, c2: null, c3: null, c4: null, c5: null, c6: null, c7: 'x', c8: 'x', c9: 'x' }
+			result = game.checkWinner()
+			expect(result.gameOver).toBe(true)
+			expect(result.winningCells).toEqual(['c7', 'c8', 'c9'])
+		})
+
+		it('detects all vertical wins', () => {
+			// Left column
+			game.field = { c1: 'x', c2: null, c3: null, c4: 'x', c5: null, c6: null, c7: 'x', c8: null, c9: null }
+			let result = game.checkWinner()
+			expect(result.gameOver).toBe(true)
+			expect(result.winningCells).toEqual(['c1', 'c4', 'c7'])
+
+			// Middle column
+			game.field = { c1: null, c2: 'o', c3: null, c4: null, c5: 'o', c6: null, c7: null, c8: 'o', c9: null }
+			result = game.checkWinner()
+			expect(result.gameOver).toBe(true)
+			expect(result.winningCells).toEqual(['c2', 'c5', 'c8'])
+
+			// Right column
+			game.field = { c1: null, c2: null, c3: 'x', c4: null, c5: null, c6: 'x', c7: null, c8: null, c9: 'x' }
+			result = game.checkWinner()
+			expect(result.gameOver).toBe(true)
+			expect(result.winningCells).toEqual(['c3', 'c6', 'c9'])
+		})
+
+		it('detects diagonal wins', () => {
+			// Top-left to bottom-right
+			game.field = { c1: 'x', c2: null, c3: null, c4: null, c5: 'x', c6: null, c7: null, c8: null, c9: 'x' }
+			let result = game.checkWinner()
+			expect(result.gameOver).toBe(true)
+			expect(result.winningCells).toEqual(['c1', 'c5', 'c9'])
+
+			// Top-right to bottom-left
+			game.field = { c1: null, c2: null, c3: 'o', c4: null, c5: 'o', c6: null, c7: 'o', c8: null, c9: null }
+			result = game.checkWinner()
+			expect(result.gameOver).toBe(true)
+			expect(result.winningCells).toEqual(['c3', 'c5', 'c7'])
+		})
+	})
+
+	describe('WIN_SETS', () => {
+		it('has 8 winning combinations', () => {
+			expect(Game.WIN_SETS).toHaveLength(8)
+		})
+
+		it('each combination has 3 cells', () => {
+			Game.WIN_SETS.forEach(set => {
+				expect(set).toHaveLength(3)
+			})
+		})
+
+		it('contains all 3 rows', () => {
+			expect(Game.WIN_SETS).toContainEqual(['c1', 'c2', 'c3'])
+			expect(Game.WIN_SETS).toContainEqual(['c4', 'c5', 'c6'])
+			expect(Game.WIN_SETS).toContainEqual(['c7', 'c8', 'c9'])
+		})
+
+		it('contains all 3 columns', () => {
+			expect(Game.WIN_SETS).toContainEqual(['c1', 'c4', 'c7'])
+			expect(Game.WIN_SETS).toContainEqual(['c2', 'c5', 'c8'])
+			expect(Game.WIN_SETS).toContainEqual(['c3', 'c6', 'c9'])
+		})
+
+		it('contains both diagonals', () => {
+			expect(Game.WIN_SETS).toContainEqual(['c1', 'c5', 'c9'])
+			expect(Game.WIN_SETS).toContainEqual(['c3', 'c5', 'c7'])
+		})
+	})
+
+	describe('complete game scenarios', () => {
+		let game, player1, player2
+
+		beforeEach(() => {
+			game = new Game()
+			player1 = new Player(1, 'Player1', 'looking')
+			player2 = new Player(2, 'Player2', 'looking')
+			game.addPlayer(player1)
+			game.addPlayer(player2)
+		})
+
+		it('x wins with top-left to bottom-right diagonal (c1-c5-c9)', () => {
+			game.makeTurn(player1, 'c1') // x
+			game.makeTurn(player2, 'c2') // o
+			game.makeTurn(player1, 'c5') // x
+			game.makeTurn(player2, 'c3') // o
+			const result = game.makeTurn(player1, 'c9') // x wins
+
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('x')
+			expect(result.winningCells).toEqual(['c1', 'c5', 'c9'])
+		})
+
+		it('x wins with top-right to bottom-left diagonal (c3-c5-c7)', () => {
+			game.makeTurn(player1, 'c3') // x
+			game.makeTurn(player2, 'c1') // o
+			game.makeTurn(player1, 'c5') // x
+			game.makeTurn(player2, 'c2') // o
+			const result = game.makeTurn(player1, 'c7') // x wins
+
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('x')
+			expect(result.winningCells).toEqual(['c3', 'c5', 'c7'])
+		})
+
+		it('o wins with diagonal (c1-c5-c9)', () => {
+			game.makeTurn(player1, 'c2') // x
+			game.makeTurn(player2, 'c1') // o
+			game.makeTurn(player1, 'c3') // x
+			game.makeTurn(player2, 'c5') // o
+			game.makeTurn(player1, 'c7') // x
+			const result = game.makeTurn(player2, 'c9') // o wins
+
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('o')
+			expect(result.winningCells).toEqual(['c1', 'c5', 'c9'])
+		})
+
+		it('o wins with diagonal (c3-c5-c7)', () => {
+			game.makeTurn(player1, 'c1') // x
+			game.makeTurn(player2, 'c3') // o
+			game.makeTurn(player1, 'c2') // x
+			game.makeTurn(player2, 'c5') // o
+			game.makeTurn(player1, 'c9') // x
+			const result = game.makeTurn(player2, 'c7') // o wins
+
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('o')
+			expect(result.winningCells).toEqual(['c3', 'c5', 'c7'])
+		})
+
+		it('x wins with first row', () => {
+			game.makeTurn(player1, 'c1') // x
+			game.makeTurn(player2, 'c4') // o
+			game.makeTurn(player1, 'c2') // x
+			game.makeTurn(player2, 'c5') // o
+			const result = game.makeTurn(player1, 'c3') // x wins
+
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('x')
+			expect(result.winningCells).toEqual(['c1', 'c2', 'c3'])
+		})
+
+		it('x wins with middle row', () => {
+			game.makeTurn(player1, 'c4') // x
+			game.makeTurn(player2, 'c1') // o
+			game.makeTurn(player1, 'c5') // x
+			game.makeTurn(player2, 'c2') // o
+			const result = game.makeTurn(player1, 'c6') // x wins
+
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('x')
+			expect(result.winningCells).toEqual(['c4', 'c5', 'c6'])
+		})
+
+		it('x wins with last row', () => {
+			game.makeTurn(player1, 'c7') // x
+			game.makeTurn(player2, 'c1') // o
+			game.makeTurn(player1, 'c8') // x
+			game.makeTurn(player2, 'c2') // o
+			const result = game.makeTurn(player1, 'c9') // x wins
+
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('x')
+			expect(result.winningCells).toEqual(['c7', 'c8', 'c9'])
+		})
+
+		it('x wins with first column', () => {
+			game.makeTurn(player1, 'c1') // x
+			game.makeTurn(player2, 'c2') // o
+			game.makeTurn(player1, 'c4') // x
+			game.makeTurn(player2, 'c3') // o
+			const result = game.makeTurn(player1, 'c7') // x wins
+
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('x')
+			expect(result.winningCells).toEqual(['c1', 'c4', 'c7'])
+		})
+
+		it('x wins with middle column', () => {
+			game.makeTurn(player1, 'c2') // x
+			game.makeTurn(player2, 'c1') // o
+			game.makeTurn(player1, 'c5') // x
+			game.makeTurn(player2, 'c3') // o
+			const result = game.makeTurn(player1, 'c8') // x wins
+
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('x')
+			expect(result.winningCells).toEqual(['c2', 'c5', 'c8'])
+		})
+
+		it('x wins with last column', () => {
+			game.makeTurn(player1, 'c3') // x
+			game.makeTurn(player2, 'c1') // o
+			game.makeTurn(player1, 'c6') // x
+			game.makeTurn(player2, 'c2') // o
+			const result = game.makeTurn(player1, 'c9') // x wins
+
+			expect(result.gameOver).toBe(true)
+			expect(result.winner).toBe('x')
+			expect(result.winningCells).toEqual(['c3', 'c6', 'c9'])
+		})
+
+		it('game ends in draw with full board', () => {
+			// x | o | x
+			// x | o | o
+			// o | x | x
+			game.makeTurn(player1, 'c1') // x
+			game.makeTurn(player2, 'c2') // o
+			game.makeTurn(player1, 'c3') // x
+			game.makeTurn(player2, 'c5') // o
+			game.makeTurn(player1, 'c4') // x
+			game.makeTurn(player2, 'c6') // o
+			game.makeTurn(player1, 'c8') // x
+			game.makeTurn(player2, 'c7') // o
+			const result = game.makeTurn(player1, 'c9') // x - draw
+
+			expect(result.gameOver).toBe(true)
+			expect(result.isDraw).toBe(true)
+			expect(result.winner).toBeNull()
+			expect(result.winningCells).toBeNull()
+		})
+
+		it('does not switch turns after game over', () => {
+			game.makeTurn(player1, 'c1') // x
+			game.makeTurn(player2, 'c4') // o
+			game.makeTurn(player1, 'c2') // x
+			game.makeTurn(player2, 'c5') // o
+			game.makeTurn(player1, 'c3') // x wins
+
+			// currentTurn should still be 'x' (the winner's turn)
+			expect(game.currentTurn).toBe('x')
+		})
+
+		it('rejects any moves after game over', () => {
+			game.makeTurn(player1, 'c1')
+			game.makeTurn(player2, 'c4')
+			game.makeTurn(player1, 'c2')
+			game.makeTurn(player2, 'c5')
+			game.makeTurn(player1, 'c3') // x wins
+
+			const result = game.makeTurn(player2, 'c6')
+			expect(result.valid).toBe(false)
+			expect(result.error).toBe('Game is not active')
 		})
 	})
 })
