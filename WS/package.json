@@ -15,11 +15,15 @@
 	},
 	"scripts": {
 		"start": "node Xttt.js",
+		"test": "jest",
 		"start:forever": "forever start -o /var/www/socket/logs/out.log -e /var/www/socket/logs/err.log -a /var/www/socket/quiz.js",
 		"start:forever_win": "forever -c node -l logs/forever.log -o logs/out.log -e logs/err.log -a quiz.js"
 	},
 	"dependencies": {
 		"express": "^4.19.2",
 		"socket.io": "^4.7.2"
+	},
+	"devDependencies": {
+		"jest": "^29.7.0"
 	}
 }

@@ -8,5 +8,11 @@ module.exports = {
   transform: {
     '^.+\\.[jt]sx?$': 'babel-jest'
   },
-  collectCoverageFrom: ['src/**/*.{js,jsx}']
+  collectCoverageFrom: [
+    'src/helpers/**/*.{js,jsx}',
+    '!src/**/*.test.{js,jsx}',
+    '!src/**/__tests__/**'
+  ],
+  testPathIgnorePatterns: ['/node_modules/'],
+  transformIgnorePatterns: ['/node_modules/']
 }
