@@ -213,7 +213,7 @@ export default class SetName extends Component {
 		return (
 			<div id='GameMain' className={!showBoard ? 'waiting-state' : ''}>
 
-				<h1>Play <span className="vs">vs</span> {this.props.game_type === 'live' && this.state.opp_name ? this.state.opp_name : this.props.game_type}</h1>
+				<h1>Play <span className="vs">vs</span> {this.props.game_type === 'live' ? (this.state.opp_name || 'Online') : 'AI'}</h1>
 
 				<div className="game-area">
 					<GameStat
