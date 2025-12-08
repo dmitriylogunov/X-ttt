@@ -52,7 +52,11 @@ export default class SetName extends Component {
 
 	componentDidMount () {
     	TweenMax.from('#game_stat', 1, {display: 'none', opacity: 0, scaleX:0, scaleY:0, ease: Power4.easeIn})
-    	TweenMax.from('#game_board', 1, {display: 'none', opacity: 0, x:-200, y:-200, scaleX:0, scaleY:0, ease: Power4.easeIn})
+    	
+    	// Only animate game board if it's visible (not in waiting state for live games)
+    	if (this.props.game_type !== 'live') {
+    		TweenMax.from('#game_board', 1, {display: 'none', opacity: 0, x:-200, y:-200, scaleX:0, scaleY:0, ease: Power4.easeIn})
+    	}
 
 		// Initialize socket connection after component is mounted
 		if (this.props.game_type === 'live') {
@@ -109,6 +113,9 @@ export default class SetName extends Component {
 				gameCode: data.gameCode,
 				playerSymbol: playerSymbol,
 				oppSymbol: oppSymbol
+			}, () => {
+				// Animate the game board appearing after state update
+				TweenMax.from('#game_board', 0.8, {opacity: 0, scale: 0.8, ease: Power4.easeOut})
 			})
 
 		}.bind(this));
@@ -192,8 +199,19 @@ export default class SetName extends Component {
 		const { cell_vals } = this.state
 		// console.log(cell_vals)
 
+		// Determine if we should show the game board
+		// Hide when: connecting, waiting for opponent, opponent disconnected, server full, or error
+		const showBoard = this.props.game_type !== 'live' || this.state.game_play || 
+			(this.state.game_stat && (
+				this.state.game_stat.startsWith('Playing') || 
+				this.state.game_stat === "You're the winner" ||
+				this.state.game_stat === 'You have lost, try again' ||
+				this.state.game_stat === 'Draw' ||
+				this.state.game_stat.endsWith('win')
+			))
+
 		return (
-			<div id='GameMain'>
+			<div id='GameMain' className={!showBoard ? 'waiting-state' : ''}>
 
 				<h1>Play <span className="vs">vs</span> {this.props.game_type === 'live' && this.state.opp_name ? this.state.opp_name : this.props.game_type}</h1>
 
@@ -205,33 +223,35 @@ export default class SetName extends Component {
 						nextTurnPly={this.state.next_turn_ply}
 					/>
 
-					<div id="game_board">
-						<table>
-						<tbody>
-							<tr>
-								<td id='game_board-c1' ref='c1' onClick={this.click_cell.bind(this)}> {this.cell_cont('c1')} </td>
-								<td id='game_board-c2' ref='c2' onClick={this.click_cell.bind(this)} className="vbrd"> {this.cell_cont('c2')} </td>
-								<td id='game_board-c3' ref='c3' onClick={this.click_cell.bind(this)}> {this.cell_cont('c3')} </td>
-							</tr>
-							<tr>
-								<td id='game_board-c4' ref='c4' onClick={this.click_cell.bind(this)} className="hbrd"> {this.cell_cont('c4')} </td>
-								<td id='game_board-c5' ref='c5' onClick={this.click_cell.bind(this)} className="vbrd hbrd"> {this.cell_cont('c5')} </td>
-								<td id='game_board-c6' ref='c6' onClick={this.click_cell.bind(this)} className="hbrd"> {this.cell_cont('c6')} </td>
-							</tr>
-							<tr>
-								<td id='game_board-c7' ref='c7' onClick={this.click_cell.bind(this)}> {this.cell_cont('c7')} </td>
-								<td id='game_board-c8' ref='c8' onClick={this.click_cell.bind(this)} className="vbrd"> {this.cell_cont('c8')} </td>
-								<td id='game_board-c9' ref='c9' onClick={this.click_cell.bind(this)}> {this.cell_cont('c9')} </td>
-							</tr>
-						</tbody>
-						</table>
-					</div>
+					{showBoard && (
+						<div id="game_board">
+							<table>
+							<tbody>
+								<tr>
+									<td id='game_board-c1' ref='c1' onClick={this.click_cell.bind(this)}> {this.cell_cont('c1')} </td>
+									<td id='game_board-c2' ref='c2' onClick={this.click_cell.bind(this)} className="vbrd"> {this.cell_cont('c2')} </td>
+									<td id='game_board-c3' ref='c3' onClick={this.click_cell.bind(this)}> {this.cell_cont('c3')} </td>
+								</tr>
+								<tr>
+									<td id='game_board-c4' ref='c4' onClick={this.click_cell.bind(this)} className="hbrd"> {this.cell_cont('c4')} </td>
+									<td id='game_board-c5' ref='c5' onClick={this.click_cell.bind(this)} className="vbrd hbrd"> {this.cell_cont('c5')} </td>
+									<td id='game_board-c6' ref='c6' onClick={this.click_cell.bind(this)} className="hbrd"> {this.cell_cont('c6')} </td>
+								</tr>
+								<tr>
+									<td id='game_board-c7' ref='c7' onClick={this.click_cell.bind(this)}> {this.cell_cont('c7')} </td>
+									<td id='game_board-c8' ref='c8' onClick={this.click_cell.bind(this)} className="vbrd"> {this.cell_cont('c8')} </td>
+									<td id='game_board-c9' ref='c9' onClick={this.click_cell.bind(this)}> {this.cell_cont('c9')} </td>
+								</tr>
+							</tbody>
+							</table>
+						</div>
+					)}
+				</div>
 
-					<div className="game-controls">
-						<button type='button' onClick={this.end_game.bind(this)} className='button'>
-							<span><span className='fa fa-caret-left'></span> Back</span>
-						</button>
-					</div>
+				<div className="game-controls">
+					<button type='button' onClick={this.end_game.bind(this)} className='button'>
+						<span><span className='fa fa-caret-left'></span> Back</span>
+					</button>
 				</div>
 
 			</div>
