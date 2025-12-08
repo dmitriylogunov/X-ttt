@@ -2,7 +2,7 @@ import React from 'react'
 
 // Mock the GameStat logic for testing without React rendering
 const getDisplayMessage = (gameType, gameStat, gamePlay, nextTurnPly) => {
-	const turnMsg = nextTurnPly ? 'Your turn' : 'Opponent turn'
+	const turnMsg = nextTurnPly ? 'Your turn' : "Opponent's turn"
 	
 	if (gameType !== 'live') {
 		// Singleplayer: show turn_msg when stat is "Start game" or "Play"
@@ -44,8 +44,8 @@ describe('GameStat logic', () => {
 			expect(getDisplayMessage(gameType, 'Start game', true, true)).toBe('Your turn')
 		})
 
-		it('shows "Opponent turn" when game is playing, stat is "Play", and not player turn', () => {
-			expect(getDisplayMessage(gameType, 'Play', true, false)).toBe('Opponent turn')
+		it('shows "Opponent\'s turn" when game is playing, stat is "Play", and not player turn', () => {
+			expect(getDisplayMessage(gameType, 'Play', true, false)).toBe("Opponent's turn")
 		})
 
 		it('shows "Your turn" when game is playing and stat is "Play"', () => {
@@ -84,8 +84,8 @@ describe('GameStat logic', () => {
 			expect(getDisplayMessage(gameType, 'Playing with John', true, true)).toBe('Your turn')
 		})
 
-		it('shows "Opponent turn" when playing with opponent and it is opponent turn', () => {
-			expect(getDisplayMessage(gameType, 'Playing with John', true, false)).toBe('Opponent turn')
+		it('shows "Opponent\'s turn" when playing with opponent and it is opponent turn', () => {
+			expect(getDisplayMessage(gameType, 'Playing with John', true, false)).toBe("Opponent's turn")
 		})
 
 		it('shows "You win" when player wins', () => {

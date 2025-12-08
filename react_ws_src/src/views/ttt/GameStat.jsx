@@ -2,7 +2,7 @@ import React from 'react'
 
 const GameStat = ({ gameType, gameStat, gamePlay, nextTurnPly, onRetry, onEndGame }) => {
 	const getDisplayMessage = () => {
-		const turnMsg = nextTurnPly ? 'Your turn' : 'Opponent turn'
+		const turnMsg = nextTurnPly ? 'Your turn' : "Opponent's turn"
 		
 		if (gameType !== 'live') {
 			// Singleplayer: show turn_msg when stat is "Start game" or "Play"
