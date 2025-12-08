@@ -14,5 +14,18 @@ module.exports = {
         runtime: 'classic'
       }
     ]
+  ],
+  plugins: [
+    function () {
+      return {
+        visitor: {
+          MetaProperty(path) {
+            if (path.node.meta.name === 'import' && path.node.property.name === 'meta') {
+              path.replaceWithSourceString('({ env: { BASE_URL: "/" } })');
+            }
+          }
+        }
+      };
+    }
   ]
 }

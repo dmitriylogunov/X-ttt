@@ -125,7 +125,7 @@ describe('prep_env', () => {
 	it('loaded from xml year', () => {
 		// const disc_model = require('../disc_model');
 
-		expect(app.settings.ws_conf.site.vals.year).toBe(2016);
+		expect(app.settings.ws_conf.site.vals.year).toBe("2016");
 	});
 
 });
