@@ -27,6 +27,11 @@ const shouldShowRetryButton = (gameStat) => {
 		gameStat === 'Server Full'
 }
 
+// Logic for showing back button (inactivity disconnect)
+const shouldShowBackButton = (gameStat) => {
+	return gameStat === 'Game disconnected due to inactivity'
+}
+
 describe('GameStat logic', () => {
 	describe('Singleplayer mode', () => {
 		const gameType = 'computer'
@@ -128,6 +133,23 @@ describe('GameStat logic', () => {
 		it('does not show retry button on win/loss', () => {
 			expect(shouldShowRetryButton('You win')).toBe(false)
 			expect(shouldShowRetryButton('Opponent win')).toBe(false)
+		})
+
+		it('does not show retry button on inactivity disconnect (shows back instead)', () => {
+			expect(shouldShowRetryButton('Game disconnected due to inactivity')).toBe(false)
+		})
+	})
+
+	describe('Back button visibility (inactivity disconnect)', () => {
+		it('shows back button when game disconnected due to inactivity', () => {
+			expect(shouldShowBackButton('Game disconnected due to inactivity')).toBe(true)
+		})
+
+		it('does not show back button for other states', () => {
+			expect(shouldShowBackButton('Waiting timed out')).toBe(false)
+			expect(shouldShowBackButton('Error')).toBe(false)
+			expect(shouldShowBackButton('Opponent disconnected')).toBe(false)
+			expect(shouldShowBackButton('Playing with John')).toBe(false)
 		})
 	})
 })

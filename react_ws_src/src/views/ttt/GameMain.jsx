@@ -9,7 +9,8 @@ import rand_arr_elem from '../../helpers/rand_arr_elem'
 import rand_to_fro from '../../helpers/rand_to_fro'
 import GameStat from './GameStat'
 
-const WAITING_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
+const WAITING_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes waiting for opponent
+const TURN_TIMEOUT_MS = 1000; //5 * 60 * 1000 // 5 minutes to make a turn
 
 export default class SetName extends Component {
 
@@ -141,6 +142,10 @@ export default class SetName extends Component {
 			}, () => {
 				// Animate the game board appearing after state update
 				TweenMax.from('#game_board', 0.8, {opacity: 0, scale: 0.8, ease: Power4.easeOut})
+				// Start turn timeout if it's player's turn
+				if (data.mode === 'm') {
+					this.startTurnTimeout()
+				}
 			})
 
 		}.bind(this));
@@ -187,6 +192,9 @@ export default class SetName extends Component {
 		this.socket.on('game_over', function(data) {
 			console.log('game_over event received:', data)
 			
+			// Clear turn timeout
+			this.clearTurnTimeout()
+			
 			// Highlight winning cells if any
 			if (data.winningCells && data.winningCells.length === 3) {
 				console.log('Highlighting winning cells:', data.winningCells)
@@ -220,6 +228,8 @@ export default class SetName extends Component {
 			clearTimeout(this.waitingTimeout)
 			this.waitingTimeout = null
 		}
+		// Clear turn timeout
+		this.clearTurnTimeout()
 		this.socket && this.socket.disconnect();
 	}
 
@@ -263,6 +273,7 @@ export default class SetName extends Component {
 						gamePlay={this.state.game_play}
 						nextTurnPly={this.state.next_turn_ply}
 						onRetry={this.props.game_type === 'live' ? this.retry_connection.bind(this) : null}
+						onEndGame={this.end_game.bind(this)}
 					/>
 
 					{showBoard && (
@@ -376,6 +387,9 @@ export default class SetName extends Component {
 
 	turn_ply_live (cell_id) {
 
+		// Clear turn timeout - player made their move
+		this.clearTurnTimeout()
+
 		let { cell_vals, playerSymbol } = this.state
 
 		cell_vals[cell_id] = playerSymbol
@@ -399,6 +413,9 @@ export default class SetName extends Component {
 //	------------------------	------------------------	------------------------
 
 	turn_opp_live (data) {
+
+		// Start turn timeout - it's now player's turn
+		this.startTurnTimeout()
 
 		let { cell_vals, oppSymbol } = this.state
 		let empty_cells_arr = []
@@ -496,9 +513,35 @@ export default class SetName extends Component {
 			clearTimeout(this.waitingTimeout)
 			this.waitingTimeout = null
 		}
+		// Clear turn timeout
+		this.clearTurnTimeout()
 		this.socket && this.socket.disconnect();
 
 		this.props.onEndGame()
+	}
+
+//	------------------------	------------------------	------------------------
+
+	startTurnTimeout () {
+		// Clear any existing turn timeout first
+		this.clearTurnTimeout()
+		
+		this.turnTimeout = setTimeout(() => {
+			if (this.state.game_play && this.state.next_turn_ply) {
+				this.socket && this.socket.disconnect()
+				this.setState({
+					game_stat: 'Game disconnected due to inactivity',
+					game_play: false
+				})
+			}
+		}, TURN_TIMEOUT_MS)
+	}
+
+	clearTurnTimeout () {
+		if (this.turnTimeout) {
+			clearTimeout(this.turnTimeout)
+			this.turnTimeout = null
+		}
 	}
 
 //	------------------------	------------------------	------------------------
