@@ -166,8 +166,10 @@ export default class Ttt extends Component {
 //	------------------------	------------------------	------------------------
 
 	handleSetName (name) {
-		// Save to localStorage
-		localStorage.setItem(STORAGE_KEY, name)
+		// Only save to localStorage if it's not the default 'Guest' name
+		if (name && name !== 'Guest') {
+			localStorage.setItem(STORAGE_KEY, name)
+		}
 		app.settings.curr_user = { name }
 		this.setState({ needsName: true })
 	}
