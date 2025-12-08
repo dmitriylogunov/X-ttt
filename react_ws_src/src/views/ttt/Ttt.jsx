@@ -20,6 +20,31 @@ export default class Ttt extends Component {
 		this.state = {
 			needsName: false
 		}
+
+		this.handleKeyDown = this.handleKeyDown.bind(this)
+	}
+
+//	------------------------	------------------------	------------------------
+
+	componentDidMount () {
+		document.addEventListener('keydown', this.handleKeyDown)
+	}
+
+//	------------------------	------------------------	------------------------
+
+	componentWillUnmount () {
+		document.removeEventListener('keydown', this.handleKeyDown)
+	}
+
+//	------------------------	------------------------	------------------------
+
+	handleKeyDown (e) {
+		if (e.key === 'Escape') {
+			const path = this.getCurrentPath()
+			if (path !== '/') {
+				this.goToMenu()
+			}
+		}
 	}
 
 //	------------------------	------------------------	------------------------

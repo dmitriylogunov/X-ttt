@@ -1,4 +1,3 @@
-const util = require('util')
 const Player = require('./Player')
 
 let nextUid = 1
@@ -34,7 +33,7 @@ const createGame = (io) => {
 		io.to(p1.sockid).emit('pair_players', { opp: { name: p2.name, uid: p2.uid }, mode: 'm' })
 		io.to(p2.sockid).emit('pair_players', { opp: { name: p1.name, uid: p1.uid }, mode: 's' })
 
-		util.log(`connect_new_players - uidM:${p1.uid} (${p1.name})  ++  uidS: ${p2.uid} (${p2.name})`)
+		console.log(`connect_new_players - uidM:${p1.uid} (${p1.name})  ++  uidS: ${p2.uid} (${p2.name})`)
 	}
 
 	const onNewPlayer = (socket, data = {}) => {
@@ -46,7 +45,7 @@ const createGame = (io) => {
 		players.push(newPlayer)
 		availablePlayers.push(newPlayer)
 
-		util.log(`New player has joined: ${playerName}`)
+		console.log(`New player has joined: ${playerName}`)
 		pairAvailablePlayers()
 	}
 
@@ -56,7 +55,7 @@ const createGame = (io) => {
 		}
 
 		io.to(socket.player.opp.sockid).emit('opp_turn', { cell_id: data.cell_id })
-		util.log(`turn  --  usr:${socket.player.mode} - :${socket.player.name}  --  cell_id:${data.cell_id}`)
+		console.log(`turn  --  usr:${socket.player.mode} - :${socket.player.name}  --  cell_id:${data.cell_id}`)
 	}
 
 	const onClientDisconnect = (socket) => {
@@ -76,12 +75,12 @@ const createGame = (io) => {
 			}
 		}
 
-		util.log(`Player has disconnected: ${socket.id}`)
+		console.log(`Player has disconnected: ${socket.id}`)
 		pairAvailablePlayers()
 	}
 
 	return (socket) => {
-		util.log(`New game player has connected: ${socket.id}`)
+		console.log(`New game player has connected: ${socket.id}`)
 
 		socket.on('new player', (data) => onNewPlayer(socket, data))
 		socket.on('ply_turn', (data) => onTurn(socket, data))

@@ -8,6 +8,36 @@ export default class SetName extends Component {
 		this.state = {
 			name: props.savedName || ''
 		}
+
+		this.handleKeyDown = this.handleKeyDown.bind(this)
+	}
+
+//	------------------------	------------------------	------------------------
+
+	componentDidMount () {
+		document.addEventListener('keydown', this.handleKeyDown)
+	}
+
+//	------------------------	------------------------	------------------------
+
+	componentWillUnmount () {
+		document.removeEventListener('keydown', this.handleKeyDown)
+	}
+
+//	------------------------	------------------------	------------------------
+
+	handleKeyDown (e) {
+		if (e.key === 'Escape') {
+			this.goBack(e)
+		}
+	}
+
+//	------------------------	------------------------	------------------------
+
+	handleInputKeyDown (e) {
+		if (e.key === 'Enter') {
+			this.saveName(e)
+		}
 	}
 
 //	------------------------	------------------------	------------------------
@@ -18,14 +48,15 @@ export default class SetName extends Component {
 
 				<h1>Enter Your Name</h1>
 
-				<div className='input_holder left'>
-					<label>Name </label>
+				<div className='input_holder'>
 					<input 
 						type='text' 
 						className='input name' 
-						placeholder='Enter your name'
+						placeholder='Your name'
 						value={this.state.name}
 						onChange={this.handleNameChange.bind(this)}
+						onKeyDown={this.handleInputKeyDown.bind(this)}
+						autoFocus
 					/>
 				</div>
 
