@@ -7,6 +7,7 @@ import app from 'ampersand-app'
 
 import rand_arr_elem from '../../helpers/rand_arr_elem'
 import rand_to_fro from '../../helpers/rand_to_fro'
+import GameStat from './GameStat'
 
 export default class SetName extends Component {
 
@@ -35,13 +36,12 @@ export default class SetName extends Component {
 				game_stat: 'Start game'
 			}
 		else {
-			this.sock_start()
-
 			this.state = {
 				cell_vals: {},
 				next_turn_ply: true,
 				game_play: false,
-				game_stat: 'Connecting'
+				game_stat: 'Connecting',
+				opp_name: null
 			}
 		}
 	}
@@ -51,6 +51,11 @@ export default class SetName extends Component {
 	componentDidMount () {
     	TweenMax.from('#game_stat', 1, {display: 'none', opacity: 0, scaleX:0, scaleY:0, ease: Power4.easeIn})
     	TweenMax.from('#game_board', 1, {display: 'none', opacity: 0, x:-200, y:-200, scaleX:0, scaleY:0, ease: Power4.easeIn})
+
+		// Initialize socket connection after component is mounted
+		if (this.props.game_type === 'live') {
+			this.sock_start()
+		}
 	}
 
 //	------------------------	------------------------	------------------------
@@ -84,7 +89,8 @@ export default class SetName extends Component {
 			this.setState({
 				next_turn_ply: data.mode=='m',
 				game_play: true,
-				game_stat: 'Playing with ' + data.opp.name
+				game_stat: 'Playing with ' + data.opp.name,
+				opp_name: data.opp.name
 			})
 
 		}.bind(this));
@@ -124,13 +130,15 @@ export default class SetName extends Component {
 		return (
 			<div id='GameMain'>
 
-				<h1>Play <span className="vs">vs</span> {this.props.game_type}</h1>
+				<h1>Play <span className="vs">vs</span> {this.props.game_type === 'live' && this.state.opp_name ? this.state.opp_name : this.props.game_type}</h1>
 
 				<div className="game-area">
-					<div id="game_stat">
-						<div id="game_stat_msg">{this.state.game_stat}</div>
-						{this.state.game_play && <div id="game_turn_msg">{this.state.next_turn_ply ? 'Your turn' : 'Opponent turn'}</div>}
-					</div>
+					<GameStat
+						gameType={this.props.game_type}
+						gameStat={this.state.game_stat}
+						gamePlay={this.state.game_play}
+						nextTurnPly={this.state.next_turn_ply}
+					/>
 
 					<div id="game_board">
 						<table>
