@@ -10,7 +10,7 @@ import rand_to_fro from '../../helpers/rand_to_fro'
 import GameStat from './GameStat'
 
 const WAITING_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes waiting for opponent
-const TURN_TIMEOUT_MS = 1000; //5 * 60 * 1000 // 5 minutes to make a turn
+const TURN_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes to make a turn
 
 export default class SetName extends Component {
 
