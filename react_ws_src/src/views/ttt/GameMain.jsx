@@ -79,8 +79,18 @@ export default class SetName extends Component {
 		this.socket.on('connect', function(data) { 
 			// console.log('socket connected', data)
 
+			this.setState({
+				game_stat: 'Waiting for opponent'
+			})
+
 			this.socket.emit('new player', { name: app.settings.curr_user.name });
 
+		}.bind(this));
+
+		this.socket.on('connect_error', function() {
+			this.setState({
+				game_stat: 'Error'
+			})
 		}.bind(this));
 
 		this.socket.on('pair_players', function(data) { 

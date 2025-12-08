@@ -59,6 +59,14 @@ describe('GameStat logic', () => {
 			expect(getDisplayMessage(gameType, 'Connecting', false, true)).toBe('Connecting')
 		})
 
+		it('shows "Waiting for opponent" after connection established', () => {
+			expect(getDisplayMessage(gameType, 'Waiting for opponent', false, true)).toBe('Waiting for opponent')
+		})
+
+		it('shows "Error" when connection fails', () => {
+			expect(getDisplayMessage(gameType, 'Error', false, true)).toBe('Error')
+		})
+
 		it('shows "Your turn" when playing with opponent and it is player turn', () => {
 			expect(getDisplayMessage(gameType, 'Playing with John', true, true)).toBe('Your turn')
 		})
