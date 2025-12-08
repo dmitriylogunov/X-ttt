@@ -137,6 +137,10 @@ export default class Ttt extends Component {
 //	------------------------	------------------------	------------------------
 
 	navigate (path) {
+		// Reset needsName when navigating to /multi so name input is always shown
+		if (path === '/multi') {
+			this.setState({ needsName: false })
+		}
 		if (this.context.router) {
 			this.context.router.push(path)
 		} else if (app.history) {
