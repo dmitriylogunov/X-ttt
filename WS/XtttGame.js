@@ -1,4 +1,8 @@
 const Player = require('./Player')
+const Game = require('./Game')
+
+// Maximum number of concurrent games
+const MAX_CONCURRENT_GAMES = 2
 
 let nextUid = 1
 
@@ -11,29 +15,75 @@ const removePlayerFrom = (collection, player) => {
 	}
 }
 
-const createGame = (io) => {
+const createGameManager = (io) => {
 	const players = []
-	const availablePlayers = []
+	const games = [] // Active games
 
-	const pairAvailablePlayers = () => {
-		if (availablePlayers.length < 2) {
+	/**
+	 * Find a game that's waiting for a second player, or create a new one
+	 * @returns {Game|null} - Returns a game or null if server is full
+	 */
+	const findOrCreateGame = () => {
+		// First, try to find a game waiting for a second player
+		const waitingGame = games.find(g => !g.isFull() && g.status === 'waiting')
+		if (waitingGame) {
+			return waitingGame
+		}
+
+		// Check if we can create a new game
+		if (games.length >= MAX_CONCURRENT_GAMES) {
+			// Check if any game is actually empty and can be reused
+			const emptyGame = games.find(g => g.isEmpty())
+			if (emptyGame) {
+				removeGameFromList(emptyGame)
+			} else {
+				return null // Server is full
+			}
+		}
+
+		// Create a new game
+		const newGame = new Game()
+		games.push(newGame)
+		console.log(`New game created: ${newGame.code}`)
+		return newGame
+	}
+
+	const removeGameFromList = (game) => {
+		const idx = games.indexOf(game)
+		if (idx >= 0) {
+			games.splice(idx, 1)
+			console.log(`Game removed: ${game.code}`)
+		}
+	}
+
+	/**
+	 * Start the game when both players are ready
+	 */
+	const startGameIfReady = (game) => {
+		if (!game.isFull()) {
 			return
 		}
 
-		const p1 = availablePlayers.shift()
-		const p2 = availablePlayers.shift()
-
-		p1.mode = 'm'
-		p2.mode = 's'
+		const [p1, p2] = game.players
 		p1.status = 'paired'
 		p2.status = 'paired'
 		p1.opp = p2
 		p2.opp = p1
 
-		io.to(p1.sockid).emit('pair_players', { opp: { name: p2.name, uid: p2.uid }, mode: 'm' })
-		io.to(p2.sockid).emit('pair_players', { opp: { name: p1.name, uid: p1.uid }, mode: 's' })
+		io.to(p1.sockid).emit('pair_players', { 
+			opp: { name: p2.name, uid: p2.uid }, 
+			mode: p1.mode,
+			symbol: p1.symbol,
+			gameCode: game.code
+		})
+		io.to(p2.sockid).emit('pair_players', { 
+			opp: { name: p1.name, uid: p1.uid }, 
+			mode: p2.mode,
+			symbol: p2.symbol,
+			gameCode: game.code
+		})
 
-		console.log(`connect_new_players - uidM:${p1.uid} (${p1.name})  ++  uidS: ${p2.uid} (${p2.name})`)
+		console.log(`Game ${game.code} started - ${p1.name} (${p1.symbol}) vs ${p2.name} (${p2.symbol})`)
 	}
 
 	const onNewPlayer = (socket, data = {}) => {
@@ -42,20 +92,43 @@ const createGame = (io) => {
 		newPlayer.sockid = socket.id
 		socket.player = newPlayer
 
-		players.push(newPlayer)
-		availablePlayers.push(newPlayer)
-
-		console.log(`New player has joined: ${playerName}`)
-		pairAvailablePlayers()
-	}
-
-	const onTurn = (socket, data = {}) => {
-		if (!socket.player || !socket.player.opp) {
+		// Try to find or create a game
+		const game = findOrCreateGame()
+		
+		if (!game) {
+			// Server is full
+			io.to(socket.id).emit('server_full', { message: 'Server Full' })
+			console.log(`Server full - player ${playerName} rejected`)
 			return
 		}
 
-		io.to(socket.player.opp.sockid).emit('opp_turn', { cell_id: data.cell_id })
-		console.log(`turn  --  usr:${socket.player.mode} - :${socket.player.name}  --  cell_id:${data.cell_id}`)
+		players.push(newPlayer)
+		game.addPlayer(newPlayer)
+
+		console.log(`New player has joined: ${playerName} (game: ${game.code})`)
+		
+		startGameIfReady(game)
+	}
+
+	const onTurn = (socket, data = {}) => {
+		const player = socket.player
+		if (!player || !player.game || !player.opp) {
+			return
+		}
+
+		const game = player.game
+		const result = game.makeTurn(player, data.cell_id)
+
+		if (!result.valid) {
+			// Send error back to the player
+			io.to(socket.id).emit('turn_error', { error: result.error })
+			console.log(`Invalid turn by ${player.name}: ${result.error}`)
+			return
+		}
+
+		// Send the turn to the opponent
+		io.to(player.opp.sockid).emit('opp_turn', { cell_id: data.cell_id })
+		console.log(`turn  --  game:${game.code}  --  ${player.name} (${player.symbol})  --  cell_id:${data.cell_id}`)
 	}
 
 	const onClientDisconnect = (socket) => {
@@ -64,19 +137,33 @@ const createGame = (io) => {
 			return
 		}
 
-		removePlayerFrom(players, player)
-		removePlayerFrom(availablePlayers, player)
+		const game = player.game
 
+		// Notify opponent about disconnect
 		if (player.opp) {
+			io.to(player.opp.sockid).emit('opponent_disconnected', { 
+				message: 'Opponent disconnected' 
+			})
+			
+			// Clean up opponent's state
 			player.opp.status = 'looking'
 			player.opp.opp = null
-			if (!availablePlayers.includes(player.opp)) {
-				availablePlayers.push(player.opp)
+		}
+
+		// Remove player from game
+		if (game) {
+			game.removePlayer(player)
+			
+			// If game is empty, remove it
+			if (game.isEmpty()) {
+				removeGameFromList(game)
 			}
 		}
 
-		console.log(`Player has disconnected: ${socket.id}`)
-		pairAvailablePlayers()
+		// Remove player from global list
+		removePlayerFrom(players, player)
+
+		console.log(`Player has disconnected: ${player.name} (${socket.id})`)
 	}
 
 	return (socket) => {
@@ -88,7 +175,10 @@ const createGame = (io) => {
 	}
 }
 
+// Export for testing
 module.exports = (io) => {
-	const registerHandlers = createGame(io)
+	const registerHandlers = createGameManager(io)
 	io.on('connection', registerHandlers)
 }
+
+module.exports.MAX_CONCURRENT_GAMES = MAX_CONCURRENT_GAMES

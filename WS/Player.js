@@ -11,6 +11,8 @@ class Player {
 		this.mode = null
 		this.name = name
 		this.opp = null
+		this.game = null    // Reference to the Game instance
+		this.symbol = null  // 'x' or 'o'
 	}
 }
 

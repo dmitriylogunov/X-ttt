@@ -41,7 +41,9 @@ export default class SetName extends Component {
 				next_turn_ply: true,
 				game_play: false,
 				game_stat: 'Connecting',
-				opp_name: null
+				opp_name: null,
+				playerSymbol: 'x',  // Will be set by server
+				oppSymbol: 'o'      // Will be set by server
 			}
 		}
 	}
@@ -96,17 +98,46 @@ export default class SetName extends Component {
 		this.socket.on('pair_players', function(data) { 
 			// console.log('paired with ', data)
 
+			const playerSymbol = data.symbol || 'x'
+			const oppSymbol = playerSymbol === 'x' ? 'o' : 'x'
+
 			this.setState({
 				next_turn_ply: data.mode=='m',
 				game_play: true,
 				game_stat: 'Playing with ' + data.opp.name,
-				opp_name: data.opp.name
+				opp_name: data.opp.name,
+				gameCode: data.gameCode,
+				playerSymbol: playerSymbol,
+				oppSymbol: oppSymbol
 			})
 
 		}.bind(this));
 
 
 		this.socket.on('opp_turn', this.turn_opp_live.bind(this));
+
+		// Handle server full
+		this.socket.on('server_full', function(data) {
+			this.setState({
+				game_stat: data.message || 'Server Full',
+				game_play: false
+			})
+		}.bind(this));
+
+		// Handle opponent disconnect
+		this.socket.on('opponent_disconnected', function(data) {
+			this.setState({
+				game_stat: data.message || 'Opponent disconnected',
+				game_play: false
+			})
+		}.bind(this));
+
+		// Handle turn errors (invalid moves)
+		this.socket.on('turn_error', function(data) {
+			console.error('Turn error:', data.error)
+			// Optionally show error to user - the server rejected the move
+			// This shouldn't happen in normal gameplay as client validates too
+		}.bind(this));
 
 
 
@@ -259,9 +290,9 @@ export default class SetName extends Component {
 
 	turn_ply_live (cell_id) {
 
-		let { cell_vals } = this.state
+		let { cell_vals, playerSymbol } = this.state
 
-		cell_vals[cell_id] = 'x'
+		cell_vals[cell_id] = playerSymbol
 
 		TweenMax.from(this.refs[cell_id], 0.7, {opacity: 0, scaleX:0, scaleY:0, ease: Power4.easeOut})
 
@@ -283,12 +314,12 @@ export default class SetName extends Component {
 
 	turn_opp_live (data) {
 
-		let { cell_vals } = this.state
+		let { cell_vals, oppSymbol } = this.state
 		let empty_cells_arr = []
 
 
 		const c = data.cell_id
-		cell_vals[c] = 'o'
+		cell_vals[c] = oppSymbol
 
 		TweenMax.from(this.refs[c], 0.7, {opacity: 0, scaleX:0, scaleY:0, ease: Power4.easeOut})
 
@@ -340,8 +371,10 @@ export default class SetName extends Component {
 			TweenMax.killAll(true)
 			TweenMax.from('td.win', 1, {opacity: 0, ease: Linear.easeIn})
 
+			// For live games, use playerSymbol; for comp games, player is always 'x'
+			const mySymbol = this.props.game_type === 'live' ? this.state.playerSymbol : 'x'
 			this.setState({
-				game_stat: (cell_vals[set[0]]=='x'?'You':'Opponent')+' win',
+				game_stat: (cell_vals[set[0]]==mySymbol?'You':'Opponent')+' win',
 				game_play: false
 			})
 

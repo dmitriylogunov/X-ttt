@@ -94,9 +94,14 @@ flowchart TB
 WS/
 ├── Xttt.js           # Server entry point (Express + Socket.IO setup)
 ├── XtttGame.js       # Game logic & Socket.IO event handlers
+├── Game.js           # Game class (server-side game state)
 ├── Player.js         # Player class/model
 ├── package.json      # Dependencies & npm scripts
 ├── Procfile          # Heroku/Render deployment config
+├── __tests__/        # Jest test files
+│   ├── Game-test.js
+│   ├── Player-test.js
+│   └── XtttGame-test.js
 └── public/           # Static files served by Express
     ├── index.html    # SPA entry (compiled React app)
     ├── ws_conf.xml   # Runtime configuration
@@ -171,7 +176,34 @@ module.exports = (io) => {
 
 ---
 
-### 3. Player.js — Player Model
+### 3. Game.js — Game Model
+
+**Purpose:** Server-side game state management with turn validation.
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `code` | `string` | Random 4-letter game code (e.g., 'ABCD') |
+| `field` | `object` | Board state (`c1`-`c9`, each `null`, `'x'`, or `'o'`) |
+| `players` | `Player[]` | Array of 1-2 players in this game |
+| `currentTurn` | `string` | `'x'` or `'o'` - whose turn it is |
+| `status` | `string` | `'waiting'`, `'playing'`, or `'finished'` |
+
+**Methods:**
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `addPlayer(player)` | `boolean` | Add player to game, assigns symbol/mode |
+| `removePlayer(player)` | `void` | Remove player from game |
+| `isFull()` | `boolean` | True if game has 2 players |
+| `isEmpty()` | `boolean` | True if game has no players |
+| `getOpponent(player)` | `Player\|null` | Get the other player |
+| `makeTurn(player, cellId)` | `{valid, error?}` | Validate and apply a turn |
+
+---
+
+### 4. Player.js — Player Model
 
 **Purpose:** Data class representing a connected player.
 
@@ -186,6 +218,8 @@ module.exports = (io) => {
 | `socket` | `object` | (Legacy, unused) Socket reference |
 | `mode` | `string` | `'m'` (goes first) or `'s'` (goes second) |
 | `opp` | `Player\|null` | Reference to opponent |
+| `game` | `Game\|null` | Reference to the Game instance |
+| `symbol` | `string\|null` | `'x'` or `'o'` - player's symbol |
 
 ---
 
@@ -207,23 +241,34 @@ sequenceDiagram
     B->>S: 'new player' { name: 'Bob' }
     Note over S: Pairing triggered
 
-    S->>A: 'pair_players' { opp: { name: 'Bob', uid: 2 }, mode: 'm' }
-    S->>B: 'pair_players' { opp: { name: 'Alice', uid: 1 }, mode: 's' }
+    S->>A: 'pair_players' { opp: { name: 'Bob', uid: 2 }, mode: 'm', symbol: 'x', gameCode: 'WXYZ' }
+    S->>B: 'pair_players' { opp: { name: 'Alice', uid: 1 }, mode: 's', symbol: 'o', gameCode: 'WXYZ' }
 ```
 
-### Gameplay (Move Relay)
+### Gameplay (Move Relay with Server Validation)
 
 ```mermaid
 sequenceDiagram
-    participant A as Client A (mode: 'm')
+    participant A as Client A (mode: 'm', symbol: 'x')
     participant S as Server
-    participant B as Client B (mode: 's')
+    participant B as Client B (mode: 's', symbol: 'o')
 
-    A->>S: 'ply_turn' { cell_id: 4 }
-    S->>B: 'opp_turn' { cell_id: 4 }
+    A->>S: 'ply_turn' { cell_id: 'c5' }
+    Note over S: Validate: x's turn, c5 is empty
+    Note over S: Update field: c5 = 'x'
+    Note over S: Switch turn to 'o'
+    S->>B: 'opp_turn' { cell_id: 'c5' }
 
-    B->>S: 'ply_turn' { cell_id: 0 }
-    S->>A: 'opp_turn' { cell_id: 0 }
+    B->>S: 'ply_turn' { cell_id: 'c1' }
+    Note over S: Validate: o's turn, c1 is empty
+    Note over S: Update field: c1 = 'o'
+    Note over S: Switch turn to 'x'
+    S->>A: 'opp_turn' { cell_id: 'c1' }
+
+    Note over A,B: Invalid move example:
+    A->>S: 'ply_turn' { cell_id: 'c5' }
+    Note over S: Validate fails: c5 is occupied
+    S->>A: 'turn_error' { error: 'Invalid turn' }
 ```
 
 ### Disconnection Handling
@@ -235,10 +280,24 @@ sequenceDiagram
     participant B as Client B
 
     A->>S: disconnect (browser closed)
-    Note over S: A removed from arrays
-    Note over S: B.status → 'looking'
-    Note over S: B added back to queue
-    Note over B: Waits for new match
+    S->>B: 'opponent_disconnected' { message: 'Opponent disconnected' }
+    Note over S: A removed from game and players array
+    Note over S: Game removed if empty
+    Note over B: Displays disconnect message
+```
+
+### Server Full Scenario
+
+```mermaid
+sequenceDiagram
+    participant C as Client C
+    participant S as Server
+
+    Note over S: 2 games active (MAX_CONCURRENT_GAMES=2)
+    C->>S: connect
+    C->>S: 'new player' { name: 'Charlie' }
+    Note over S: No waiting games, cannot create new
+    S->>C: 'server_full' { message: 'Server Full' }
 ```
 
 ---
