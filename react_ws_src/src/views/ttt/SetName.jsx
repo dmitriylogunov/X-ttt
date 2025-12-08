@@ -84,9 +84,7 @@ export default class SetName extends Component {
 
 	saveName (e) {
 		const name = this.state.name.trim()
-		if (name) {
-			this.props.onSetName(name)
-		}
+		this.props.onSetName(name || 'Guest')
 	}
 
 //	------------------------	------------------------	------------------------

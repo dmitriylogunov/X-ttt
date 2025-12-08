@@ -3,11 +3,19 @@
 section#TTT_game{
 	text-align: center;
 	padding: 40px 20px;
-	min-height: 100vh;
+	height: 100vh;
+	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
 	background: $gradientPrimary;
 	color: $textLight;
+	
+	// Direct child div wrapper needs flex properties
+	> div {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+	}
 
 	// ============================================
 	// ANIMATIONS

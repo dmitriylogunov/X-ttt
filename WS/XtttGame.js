@@ -87,7 +87,7 @@ const createGameManager = (io) => {
 	}
 
 	const onNewPlayer = (socket, data = {}) => {
-		const playerName = data.name || 'Player'
+		const playerName = data.name || 'Guest'
 		const newPlayer = new Player(generateUid(), playerName, 'looking')
 		newPlayer.sockid = socket.id
 		socket.player = newPlayer
