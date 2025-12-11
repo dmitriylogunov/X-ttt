@@ -25,13 +25,14 @@ This document provides a comprehensive overview of the Node.js WebSocket server 
 
 The WS server is a lightweight real-time game server built with:
 
-| Technology | Purpose |
-|------------|---------|
-| **Node.js** | Runtime environment |
-| **Express 4** | HTTP server & static file serving |
+| Technology      | Purpose                                         |
+| --------------- | ----------------------------------------------- |
+| **Node.js**     | Runtime environment                             |
+| **Express 4**   | HTTP server & static file serving               |
 | **Socket.IO 4** | Real-time bidirectional WebSocket communication |
 
 The server's primary responsibilities are:
+
 - Serving the compiled React front-end as static files
 - Managing WebSocket connections for real-time multiplayer gameplay
 - Matching players into pairs (matchmaking)
@@ -119,15 +120,16 @@ WS/
 
 **Key Architecture Decisions:**
 
-| Decision | Rationale |
-|----------|-----------|
-| `http.createServer(app)` | Socket.IO attaches to the raw HTTP server, not Express |
-| CORS `origin: '*'` | Allows connections from any origin (dev-friendly; restrict in production if needed) |
+| Decision                                    | Rationale                                                                                       |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `http.createServer(app)`                    | Socket.IO attaches to the raw HTTP server, not Express                                          |
+| CORS `origin: '*'`                          | Allows connections from any origin (dev-friendly; restrict in production if needed)             |
 | Dual transports: `['websocket', 'polling']` | Ensures compatibility with hosting platforms (e.g., Render) that may have WebSocket limitations |
-| Health check endpoint `/health` | Required by many PaaS providers for container health monitoring |
-| SPA catch-all `app.get('*')` | Enables client-side routing (React Router) |
+| Health check endpoint `/health`             | Required by many PaaS providers for container health monitoring                                 |
+| SPA catch-all `app.get('*')`                | Enables client-side routing (React Router)                                                      |
 
 **Code Flow:**
+
 ```
 1. Create Express app
 2. Create HTTP server wrapping Express
@@ -147,19 +149,20 @@ WS/
 
 ```javascript
 module.exports = (io) => {
-  const registerHandlers = createGame(io)  // Factory returns handler
-  io.on('connection', registerHandlers)    // Handler registered per connection
-}
+  const registerHandlers = createGame(io); // Factory returns handler
+  io.on("connection", registerHandlers); // Handler registered per connection
+};
 ```
 
 **State Management:**
 
-| Array | Contents | Purpose |
-|-------|----------|---------|
-| `players[]` | All Player instances | Track all connected users |
-| `availablePlayers[]` | Players with status 'looking' | Queue for matchmaking |
+| Array                | Contents                      | Purpose                   |
+| -------------------- | ----------------------------- | ------------------------- |
+| `players[]`          | All Player instances          | Track all connected users |
+| `availablePlayers[]` | Players with status 'looking' | Queue for matchmaking     |
 
 **Matchmaking Algorithm (`pairAvailablePlayers`):**
+
 1. Check if 2+ players are in `availablePlayers`
 2. Pop first two players from queue (FIFO)
 3. Assign modes: first player = `'m'` (master), second = `'s'` (slave)
@@ -168,10 +171,10 @@ module.exports = (io) => {
 
 **Event Handlers:**
 
-| Handler | Trigger | Action |
-|---------|---------|--------|
-| `onNewPlayer` | `'new player'` event | Create Player, add to queues, attempt pairing |
-| `onTurn` | `'ply_turn'` event | Forward `cell_id` to opponent via `'opp_turn'` |
+| Handler              | Trigger              | Action                                          |
+| -------------------- | -------------------- | ----------------------------------------------- |
+| `onNewPlayer`        | `'new player'` event | Create Player, add to queues, attempt pairing   |
+| `onTurn`             | `'ply_turn'` event   | Forward `cell_id` to opponent via `'opp_turn'`  |
 | `onClientDisconnect` | `'disconnect'` event | Remove from arrays, re-queue opponent if paired |
 
 ---
@@ -182,33 +185,33 @@ module.exports = (io) => {
 
 **Properties:**
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `code` | `string` | Random 4-letter game code (e.g., 'ABCD') |
-| `field` | `object` | Board state (`c1`-`c9`, each `null`, `'x'`, or `'o'`) |
-| `players` | `Player[]` | Array of 1-2 players in this game |
-| `currentTurn` | `string` | `'x'` or `'o'` - whose turn it is |
-| `status` | `string` | `'waiting'`, `'playing'`, or `'finished'` |
-| `winner` | `string\|null` | `'x'`, `'o'`, or `null` (draw/not finished) |
-| `winningCells` | `string[]\|null` | Array of winning cell IDs or `null` |
+| Property       | Type             | Description                                           |
+| -------------- | ---------------- | ----------------------------------------------------- |
+| `code`         | `string`         | Random 4-letter game code (e.g., 'ABCD')              |
+| `field`        | `object`         | Board state (`c1`-`c9`, each `null`, `'x'`, or `'o'`) |
+| `players`      | `Player[]`       | Array of 1-2 players in this game                     |
+| `currentTurn`  | `string`         | `'x'` or `'o'` - whose turn it is                     |
+| `status`       | `string`         | `'waiting'`, `'playing'`, or `'finished'`             |
+| `winner`       | `string\|null`   | `'x'`, `'o'`, or `null` (draw/not finished)           |
+| `winningCells` | `string[]\|null` | Array of winning cell IDs or `null`                   |
 
 **Static Properties:**
 
-| Property | Type | Description |
-|----------|------|-------------|
+| Property   | Type         | Description                                       |
+| ---------- | ------------ | ------------------------------------------------- |
 | `WIN_SETS` | `string[][]` | 8 winning combinations (rows, columns, diagonals) |
 
 **Methods:**
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `addPlayer(player)` | `boolean` | Add player to game, assigns symbol/mode |
-| `removePlayer(player)` | `void` | Remove player from game |
-| `isFull()` | `boolean` | True if game has 2 players |
-| `isEmpty()` | `boolean` | True if game has no players |
-| `getOpponent(player)` | `Player\|null` | Get the other player |
+| Method                     | Returns                                                       | Description                                   |
+| -------------------------- | ------------------------------------------------------------- | --------------------------------------------- |
+| `addPlayer(player)`        | `boolean`                                                     | Add player to game, assigns symbol/mode       |
+| `removePlayer(player)`     | `void`                                                        | Remove player from game                       |
+| `isFull()`                 | `boolean`                                                     | True if game has 2 players                    |
+| `isEmpty()`                | `boolean`                                                     | True if game has no players                   |
+| `getOpponent(player)`      | `Player\|null`                                                | Get the other player                          |
 | `makeTurn(player, cellId)` | `{valid, error?, gameOver?, winner?, winningCells?, isDraw?}` | Validate turn, apply it, and check for winner |
-| `checkWinner()` | `{gameOver, winner?, winningCells?, isDraw?}` | Check if game is over |
+| `checkWinner()`            | `{gameOver, winner?, winningCells?, isDraw?}`                 | Check if game is over                         |
 
 ---
 
@@ -218,17 +221,17 @@ module.exports = (io) => {
 
 **Properties:**
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `uid` | `number` | Auto-incremented unique ID |
-| `name` | `string` | Player's display name |
-| `status` | `string` | `'looking'` or `'paired'` |
-| `sockid` | `string` | Socket.IO socket ID |
-| `socket` | `object` | (Legacy, unused) Socket reference |
-| `mode` | `string` | `'m'` (goes first) or `'s'` (goes second) |
-| `opp` | `Player\|null` | Reference to opponent |
-| `game` | `Game\|null` | Reference to the Game instance |
-| `symbol` | `string\|null` | `'x'` or `'o'` - player's symbol |
+| Property | Type           | Description                               |
+| -------- | -------------- | ----------------------------------------- |
+| `uid`    | `number`       | Auto-incremented unique ID                |
+| `name`   | `string`       | Player's display name                     |
+| `status` | `string`       | `'looking'` or `'paired'`                 |
+| `sockid` | `string`       | Socket.IO socket ID                       |
+| `socket` | `object`       | (Legacy, unused) Socket reference         |
+| `mode`   | `string`       | `'m'` (goes first) or `'s'` (goes second) |
+| `opp`    | `Player\|null` | Reference to opponent                     |
+| `game`   | `Game\|null`   | Reference to the Game instance            |
+| `symbol` | `string\|null` | `'x'` or `'o'` - player's symbol          |
 
 ---
 
@@ -352,20 +355,22 @@ sequenceDiagram
 The Express server serves compiled front-end assets from `WS/public/`:
 
 ```javascript
-app.use(express.static(path.join(__dirname, 'public')))
+app.use(express.static(path.join(__dirname, "public")));
 ```
 
 **Production Deployment:**
+
 1. Build React app in `react_ws_src/` → outputs to `dist/`
 2. Copy `dist/*` to `WS/public/`
 3. Copy `static/*` to `WS/public/`
 
 **SPA Fallback:**
 All non-API routes fall through to `index.html` to support React Router client-side routing:
+
 ```javascript
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'))
-})
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 ```
 
 ---
@@ -377,14 +382,15 @@ app.get('*', (req, res) => {
 Located at `public/ws_conf.xml`, fetched by the React client at startup.
 
 Key settings:
+
 - `<SOCKET__io u="..." />` — Override Socket.IO server URL (leave empty for same-origin)
 - `<SCRIPT_ROOT u="..." />` — Base URL for the app
 
 ### Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `3001` | Server listening port |
+| Variable | Default | Description           |
+| -------- | ------- | --------------------- |
+| `PORT`   | `3001`  | Server listening port |
 
 ---
 
@@ -393,6 +399,7 @@ Key settings:
 ### Heroku / Render (Procfile)
 
 The `Procfile` specifies the web process:
+
 ```
 web: node Xttt.js
 ```
@@ -416,6 +423,7 @@ web: node Xttt.js
 ### Process Management (Production)
 
 For production, use a process manager like `forever` or `pm2`:
+
 ```bash
 # Using forever (scripts in package.json)
 npm run start:forever
@@ -431,18 +439,20 @@ pm2 start Xttt.js --name "xttt-server"
 ### Adding New Socket Events
 
 1. Define the event handler in `XtttGame.js`:
+
    ```javascript
    const onMyEvent = (socket, data) => {
      // Handle event
-   }
+   };
    ```
 
 2. Register in the returned handler:
+
    ```javascript
    return (socket) => {
      // ... existing handlers
-     socket.on('my_event', (data) => onMyEvent(socket, data))
-   }
+     socket.on("my_event", (data) => onMyEvent(socket, data));
+   };
    ```
 
 3. Document the event in this README.
@@ -453,24 +463,125 @@ pm2 start Xttt.js --name "xttt-server"
 - **Single instance:** Current design doesn't support horizontal scaling (no shared state).
 - **UID generation:** Simple incrementing integer; resets on restart.
 
-### Potential Improvements
+### Suggested Improvements
 
-| Area | Current State | Improvement |
-|------|---------------|-------------|
-| State persistence | In-memory | Add Redis for scaling |
-| Authentication | None | Add JWT or session tokens |
-| Room management | Auto-pair only | Add named rooms / invite links |
-| Reconnection | Full reset | Implement session resumption |
-| Logging | `util.log` | Use structured logging (Winston/Pino) |
+#### Critical / High Priority
+
+1. **Add TypeScript Support**
+
+   - Add type definitions for Player, Game classes
+   - Improves maintainability and catches bugs at compile time
+   - Better IDE support and auto-completion
+
+2. **Make MAX_CONCURRENT_GAMES Configurable**
+
+   - Current limit: 2 concurrent games (hardcoded)
+   - Add environment variable: `MAX_GAMES=10`
+   - Allow dynamic scaling based on server resources
+
+3. **Add Rate Limiting**
+
+   - Prevent spam connections and rapid move submissions
+   - Use `socket.io-rate-limiter` or custom middleware
+   - Protect against DoS attacks
+
+4. **Add Input Validation & Sanitization**
+   - Sanitize player names to prevent XSS attacks
+   - Validate cell_id format more strictly (regex)
+   - Add maximum name length limits
+
+#### Medium Priority
+
+5. **Improve Matchmaking System**
+
+   - Add skill-based matchmaking (ELO rating)
+   - Support private game rooms with invite codes
+   - Allow rematch with same opponent
+   - Add queue position indicator for waiting players
+
+6. **Add Persistence Layer**
+
+   - Store game statistics in database (MongoDB/PostgreSQL)
+   - Track player win/loss history
+   - Enable game replay functionality
+   - Persist active games for crash recovery
+
+7. **Add Authentication (Optional)**
+
+   - JWT-based player authentication
+   - Persistent player profiles and statistics
+   - OAuth integration (Google, GitHub)
+
+8. **Monitoring & Observability**
+
+   - Replace console.log with structured logging (Winston/Pino)
+   - Add metrics collection (Prometheus)
+   - Track: active games, player counts, latencies, error rates
+   - Add health check with detailed status
+
+9. **Add Comprehensive Tests**
+
+   - Integration tests for full game flows
+   - Test edge cases: disconnects mid-game, rapid moves, reconnection
+   - Load testing with multiple concurrent games
+   - Mock Socket.IO for unit tests
+
+10. **Session Resumption**
+    - Allow players to reconnect to ongoing games
+    - Store game state temporarily after disconnect
+    - Implement reconnection timeout window
+
+#### Low Priority / Nice-to-Have
+
+11. **Horizontal Scaling Support**
+
+    - Use Redis adapter for Socket.IO (`@socket.io/redis-adapter`)
+    - Enable multiple server instances behind load balancer
+    - Shared game state across instances
+
+12. **Spectator Mode**
+
+    - Allow others to watch ongoing games
+    - Read-only WebSocket connections
+    - Live game list for spectators
+
+13. **Tournament Support**
+
+    - Bracket-style tournaments
+    - Scheduled matches
+    - Tournament leaderboards
+
+14. **Anti-Cheat Measures**
+
+    - Server-side move timing validation
+    - Detect automated/bot players
+    - Rate limit moves per game
+
+15. **API Documentation**
+
+    - Add OpenAPI/Swagger for REST endpoints
+    - Socket.IO event documentation (AsyncAPI spec)
+    - Generate client SDKs
+
+16. **Docker Support**
+
+    - Add Dockerfile for containerized deployment
+    - Add docker-compose.yml for local development
+    - Multi-stage build for smaller images
+
+17. **Graceful Shutdown**
+    - Notify connected players before server restart
+    - Complete ongoing games or save state
+    - Drain connections properly
 
 ---
 
 ## Dependencies
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `express` | ^4.19.2 | HTTP server & routing |
-| `socket.io` | ^4.7.2 | Real-time WebSocket communication |
+| Package     | Version | Purpose                           |
+| ----------- | ------- | --------------------------------- |
+| `express`   | ^4.19.2 | HTTP server & routing             |
+| `socket.io` | ^4.7.2  | Real-time WebSocket communication |
 
 ---
 
